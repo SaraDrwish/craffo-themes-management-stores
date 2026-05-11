@@ -16,7 +16,6 @@ const planColors = {
 export default function ThemeCard({ theme, platform }) {
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const isFromApi = !theme.is_modified && theme.original_api_data;
 
   const copyAllStoreLinks = async () => {
     const links = await getAllStoreLinks({ theme_id: theme.id });
@@ -42,14 +41,7 @@ export default function ThemeCard({ theme, platform }) {
           />
           <div className="absolute top-2 right-2 bg-purple text-white text-xs px-2 py-1 rounded-full">{platform}</div>
           {theme.is_pinned === 1 && <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">📌 مثبت</div>}
-          {theme.plan && (
-            <div className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold ${planColors[theme.plan]}`}>
-              {planLabels[theme.plan]}
-            </div>
-          )}
-          {isFromApi && (
-            <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">✅ من API</div>
-          )}
+          {/* شارة الباقة تم نقلها إلى المتجر، لذلك تم إزالتها من الثيم */}
         </div>
         <div className="p-4">
           <h3 className="text-xl font-bold text-dark-navy">{theme.name}</h3>

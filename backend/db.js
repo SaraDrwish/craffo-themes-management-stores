@@ -35,6 +35,14 @@ export function all(sql, params = []) {
 }
 
 async function initTables() {
+   await run(`
+    ALTER TABLE store_links ADD COLUMN plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'growth', 'gold'))
+  `).catch(() => {});  
+
+  await run(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_store_url ON store_links (store_url)
+  `);
+
   await run(`PRAGMA foreign_keys = ON;`);
   await run(`
     CREATE TABLE IF NOT EXISTS themes (
@@ -98,8 +106,12 @@ async function createDefaultAdmin() {
   }
 }
 
+
+
+
 await initTables();
 await createDefaultAdmin();
 console.log('✅ SQLite database ready');
 
 export default { run, get, all, db };
+
