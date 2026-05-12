@@ -4,43 +4,67 @@ import { verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET store links
+// GET all store links (with optional filtering by theme, platform, plan)
 router.get('/', async (req, res) => {
-  const { category_id, theme_id, platform, search, plan } = req.query;
-  let query = `
-    SELECT sl.*, c.name as category_name, c.theme_id, t.name as theme_name
+  const { theme_id, platform, search, plan } = req.query;
+  let sql = `
+    SELECT sl.*, t.name as theme_name
     FROM store_links sl
-    JOIN categories c ON sl.category_id = c.id
-    JOIN themes t ON c.theme_id = t.id
+    JOIN themes t ON sl.theme_id = t.id
     WHERE sl.is_approved = 1
   `;
   const params = [];
-  if (category_id) { query += ` AND sl.category_id = ?`; params.push(category_id); }
-  if (theme_id) { query += ` AND c.theme_id = ?`; params.push(theme_id); }
-  if (platform) { query += ` AND sl.platform = ?`; params.push(platform); }
-  if (plan && ['starter', 'growth', 'gold'].includes(plan)) { query += ` AND sl.plan = ?`; params.push(plan); }
-  if (search) { query += ` AND (sl.store_name LIKE ? OR sl.store_url LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
-  query += ` ORDER BY sl.store_name ASC`;
-  const links = await db.all(query, params);
-  res.json(links);
+  if (theme_id) { sql += ` AND sl.theme_id = ?`; params.push(theme_id); }
+  if (platform && (platform === 'Salla' || platform === 'Zid')) { sql += ` AND sl.platform = ?`; params.push(platform); }
+  if (plan && (plan === 'starter' || plan === 'growth' || plan === 'gold')) { sql += ` AND sl.plan = ?`; params.push(plan); }
+  if (search) { sql += ` AND (sl.store_name LIKE ? OR sl.store_url LIKE ?)`; const like = `%${search}%`; params.push(like, like); }
+  sql += ` ORDER BY sl.store_name ASC`;
+  try {
+    const links = await db.all(sql, params);
+    res.json(links);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST create store link (admin) - مع التحقق من التكرار
+// GET single store link
+router.get('/:id', async (req, res) => {
+  try {
+    const link = await db.get(`
+      SELECT sl.*, t.name as theme_name 
+      FROM store_links sl 
+      JOIN themes t ON sl.theme_id = t.id 
+      WHERE sl.id = ?
+    `, [req.params.id]);
+    if (!link) return res.status(404).json({ error: 'Store link not found' });
+    res.json(link);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST create store link (admin)
 router.post('/', verifyAdmin, async (req, res) => {
-  const { category_id, store_name, store_url, platform, plan, is_approved = 1 } = req.body;
-  if (!category_id || !store_name || !store_url || !platform) {
+  const { theme_id, store_name, store_url, platform, plan } = req.body;
+  if (!theme_id || !store_name || !store_url || !platform) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   try {
+    // التحقق من وجود الثيم
+    const themeExists = await db.get('SELECT id FROM themes WHERE id = ?', [theme_id]);
+    if (!themeExists) return res.status(404).json({ error: 'Theme not found' });
     // التحقق من تكرار الرابط
     const existing = await db.get('SELECT id FROM store_links WHERE store_url = ?', [store_url]);
     if (existing) {
       return res.status(409).json({ error: 'هذا الرابط موجود مسبقاً. يرجى استخدام رابط آخر.' });
     }
+    const finalPlan = (plan && plan !== 'none') ? plan : null;
     const result = await db.run(`
-      INSERT INTO store_links (category_id, store_name, store_url, platform, plan, is_approved)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [category_id, store_name, store_url, platform, plan || 'starter', is_approved]);
+      INSERT INTO store_links (theme_id, store_name, store_url, platform, plan, is_approved)
+      VALUES (?, ?, ?, ?, ?, 1)
+    `, [theme_id, store_name, store_url, platform, finalPlan]);
     res.status(201).json({ id: result.lastID, success: true });
   } catch (err) {
     if (err.message.includes('UNIQUE constraint')) {
@@ -51,27 +75,34 @@ router.post('/', verifyAdmin, async (req, res) => {
   }
 });
 
-// PUT update store link (admin) - مع التحقق من التكرار (تجاهل نفس الرابط)
+// PUT update store link (admin)
 router.put('/:id', verifyAdmin, async (req, res) => {
-  const { store_name, store_url, platform, category_id, plan, is_approved } = req.body;
+  const { theme_id, store_name, store_url, platform, plan, is_approved } = req.body;
   try {
-    const current = await db.get('SELECT store_url FROM store_links WHERE id = ?', [req.params.id]);
+    const current = await db.get('SELECT store_url, theme_id FROM store_links WHERE id = ?', [req.params.id]);
     if (!current) return res.status(404).json({ error: 'Store link not found' });
     
-    // إذا تم تغيير الرابط، تأكد من عدم تكراره
     if (store_url && store_url !== current.store_url) {
       const existing = await db.get('SELECT id FROM store_links WHERE store_url = ? AND id != ?', [store_url, req.params.id]);
       if (existing) {
         return res.status(409).json({ error: 'هذا الرابط موجود مسبقاً.' });
       }
     }
+    if (theme_id && theme_id !== current.theme_id) {
+      const themeExists = await db.get('SELECT id FROM themes WHERE id = ?', [theme_id]);
+      if (!themeExists) return res.status(404).json({ error: 'New theme not found' });
+    }
     
-    const updates = [], values = [];
+    const updates = [];
+    const values = [];
+    if (theme_id !== undefined) { updates.push('theme_id = ?'); values.push(theme_id); }
     if (store_name !== undefined) { updates.push('store_name = ?'); values.push(store_name); }
     if (store_url !== undefined) { updates.push('store_url = ?'); values.push(store_url); }
     if (platform !== undefined) { updates.push('platform = ?'); values.push(platform); }
-    if (category_id !== undefined) { updates.push('category_id = ?'); values.push(category_id); }
-    if (plan !== undefined) { updates.push('plan = ?'); values.push(plan); }
+    if (plan !== undefined) { 
+      updates.push('plan = ?'); 
+      values.push((plan && plan !== 'none') ? plan : null);
+    }
     if (is_approved !== undefined) { updates.push('is_approved = ?'); values.push(is_approved); }
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
     values.push(req.params.id);
@@ -85,9 +116,14 @@ router.put('/:id', verifyAdmin, async (req, res) => {
 
 // DELETE store link
 router.delete('/:id', verifyAdmin, async (req, res) => {
-  const result = await db.run('DELETE FROM store_links WHERE id = ?', [req.params.id]);
-  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
-  res.json({ success: true });
+  try {
+    const result = await db.run('DELETE FROM store_links WHERE id = ?', [req.params.id]);
+    if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete store link' });
+  }
 });
 
 export default router;

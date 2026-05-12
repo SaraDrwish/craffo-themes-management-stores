@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
-// Themes
+// ============== الثيمات ==============
 export const getAllThemes = async (platform = null, plan = null, category = null) => {
   const params = new URLSearchParams();
   if (platform) params.append('platform', platform);
@@ -52,7 +52,7 @@ export const reorderTheme = async (id, direction, token) => {
   return res.data;
 };
 
-// Categories
+// ============== الفئات ==============
 export const getAllCategories = async (themeId = null) => {
   const url = themeId ? `${API_BASE_URL}/categories?theme_id=${themeId}` : `${API_BASE_URL}/categories`;
   const res = await axios.get(url);
@@ -80,7 +80,7 @@ export const deleteCategory = async (id, token) => {
   return res.data;
 };
 
-// Store Links
+// ============== المتاجر (مع دعم الباقات ومنع التكرار) ==============
 export const getAllStoreLinks = async (filters = {}) => {
   const params = new URLSearchParams(filters);
   const res = await axios.get(`${API_BASE_URL}/store-links?${params.toString()}`);
@@ -108,7 +108,7 @@ export const deleteStoreLink = async (id, token) => {
   return res.data;
 };
 
-// Admin & Auth
+// ============== المصادقة والإدارة ==============
 export const adminLogin = async (username, password) => {
   const res = await axios.post(`${API_BASE_URL}/auth/login`, { username, password });
   return res.data;
@@ -130,6 +130,13 @@ export const syncNow = async (token) => {
 
 export const importDiscordNow = async (token) => {
   const res = await axios.post(`${API_BASE_URL}/discord/import`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};
+
+export const triggerBackup = async (token) => {
+  const res = await axios.post(`${API_BASE_URL}/admin/backup`, {}, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;

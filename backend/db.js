@@ -35,15 +35,9 @@ export function all(sql, params = []) {
 }
 
 async function initTables() {
-   await run(`
-    ALTER TABLE store_links ADD COLUMN plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'growth', 'gold'))
-  `).catch(() => {});  
-
-  await run(`
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_store_url ON store_links (store_url)
-  `);
-
   await run(`PRAGMA foreign_keys = ON;`);
+
+  // جدول الثيمات
   await run(`
     CREATE TABLE IF NOT EXISTS themes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,28 +60,26 @@ async function initTables() {
       UNIQUE(platform, name)
     )
   `);
-  await run(`
-    CREATE TABLE IF NOT EXISTS categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      theme_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE,
-      UNIQUE(theme_id, name)
-    )
-  `);
+
+  // جدول المتاجر (مرتبط مباشرة بالثيم)
   await run(`
     CREATE TABLE IF NOT EXISTS store_links (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      category_id INTEGER NOT NULL,
+      theme_id INTEGER NOT NULL,
       store_name TEXT NOT NULL,
       store_url TEXT NOT NULL,
       platform TEXT NOT NULL,
+      plan TEXT DEFAULT NULL,
       is_approved INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+      FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE
     )
   `);
+
+  // فهرس فريد لمنع تكرار الرابط
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_store_url ON store_links (store_url)`);
+
+  // جدول الأدمن
   await run(`
     CREATE TABLE IF NOT EXISTS admin_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,6 +87,8 @@ async function initTables() {
       password_hash TEXT NOT NULL
     )
   `);
+
+  // تجاهل جدول categories القديم إذا كان موجوداً – لا نستخدمه
 }
 
 async function createDefaultAdmin() {
@@ -106,12 +100,8 @@ async function createDefaultAdmin() {
   }
 }
 
-
-
-
 await initTables();
 await createDefaultAdmin();
-console.log('✅ SQLite database ready');
+console.log('✅ SQLite database ready (store_links linked directly to themes)');
 
 export default { run, get, all, db };
-
