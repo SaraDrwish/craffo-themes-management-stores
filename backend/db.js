@@ -48,7 +48,7 @@ async function initTables() {
       price TEXT,
       demo_url TEXT,
       purchase_url TEXT,
-      plan TEXT DEFAULT 'starter' CHECK(plan IN ('starter', 'growth', 'gold')),
+      plan TEXT DEFAULT NULL,   -- أصبح يقبل NULL (بدون باقة)
       order_index INTEGER DEFAULT 0,
       is_hidden INTEGER DEFAULT 0,
       is_pinned INTEGER DEFAULT 0,
@@ -97,6 +97,6 @@ async function createDefaultAdmin() {
 
 await initTables();
 await createDefaultAdmin();
-console.log('✅ SQLite database ready (store_links includes image field)');
+console.log('✅ SQLite database ready (themes.plan accepts NULL)');
 
 export { db };

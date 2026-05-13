@@ -2,9 +2,21 @@ import { useState } from 'react';
 import ThemeDetailModal from './ThemeDetailModal';
 import { getAllStoreLinks } from '../services/api';
 
+const planLabels = {
+  starter: '🚀 باقة الانطلاق',
+  growth: '🌟 باقة النمو',
+  gold: '👑 الباقة الذهبية'
+};
+const planColors = {
+  starter: 'bg-green-500',
+  growth: 'bg-blue-600',
+  gold: 'bg-yellow-600'
+};
+
 export default function ThemeCard({ theme, platform }) {
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
+
   const copyAllStoreLinks = async () => {
     const links = await getAllStoreLinks({ theme_id: theme.id });
     const urls = links.map(l => l.store_url).join('\n');
@@ -12,14 +24,29 @@ export default function ThemeCard({ theme, platform }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const imageUrl = theme.image && theme.image.startsWith('http') ? theme.image : (theme.image ? `https://tms.craffo.com/storage/${theme.image}` : 'https://placehold.co/600x400?text=No+Preview');
+
+  const imageUrl = theme.image && theme.image.startsWith('http')
+    ? theme.image
+    : (theme.image ? `https://tms.craffo.com/storage/${theme.image}` : 'https://placehold.co/600x400?text=No+Preview');
+
   return (
     <>
       <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-light-mauve hover:border-purple group relative">
         <div className="relative h-48 bg-gray-100 overflow-hidden">
-          <img src={imageUrl} alt={theme.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=No+Preview'; }} />
+          <img
+            src={imageUrl}
+            alt={theme.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=No+Preview'; }}
+          />
           <div className="absolute top-2 right-2 bg-purple text-white text-xs px-2 py-1 rounded-full">{platform}</div>
           {theme.is_pinned === 1 && <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">📌 مثبت</div>}
+          {/* إظهار شارة الباقة فقط إذا كان الثيم له باقة محددة (غير null) */}
+          {theme.plan && theme.plan !== 'none' && (
+            <div className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold ${planColors[theme.plan]}`}>
+              {planLabels[theme.plan]}
+            </div>
+          )}
         </div>
         <div className="p-4">
           <h3 className="text-xl font-bold text-dark-navy">{theme.name}</h3>

@@ -40,6 +40,7 @@ export default function AdminDashboard() {
       if (editingTheme) await updateTheme(editingTheme.id, formData, token);
       else await createTheme(formData, token);
       resetForm(); fetchThemes(); fetchStats();
+      setErrorMsg('');
     } catch (err) { setErrorMsg(err.response?.data?.error || 'حدث خطأ'); }
   };
   const handleThemeDelete = async (id) => { if (confirm('حذف الثيم؟')) { await deleteTheme(id, token); fetchThemes(); fetchStats(); } };
@@ -96,7 +97,13 @@ export default function AdminDashboard() {
         <input placeholder="الاسم" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="border p-1 rounded" />
         <select value={formData.platform || 'Salla'} onChange={e => setFormData({...formData, platform: e.target.value})} className="border p-1 rounded"><option value="Salla">سلة</option><option value="Zid">زد</option></select>
         <input placeholder="السعر" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className="border p-1 rounded" />
-        <select value={formData.plan || 'starter'} onChange={e => setFormData({...formData, plan: e.target.value})} className="border p-1 rounded"><option value="starter">انطلاق</option><option value="growth">نمو</option><option value="gold">ذهبية</option></select>
+        {/* قائمة الباقات مع خيار "بدون باقة" */}
+        <select value={formData.plan || 'none'} onChange={e => setFormData({...formData, plan: e.target.value})} className="border p-1 rounded">
+          <option value="none">بدون باقة</option>
+          <option value="starter">🚀 باقة الانطلاق</option>
+          <option value="growth">🌟 باقة النمو</option>
+          <option value="gold">👑 الباقة الذهبية</option>
+        </select>
         <input placeholder="رابط الصورة" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} className="border p-1 rounded" />
         <input placeholder="رابط Demo" value={formData.demo_url || ''} onChange={e => setFormData({...formData, demo_url: e.target.value})} className="border p-1 rounded" />
         <input placeholder="رابط الشراء" value={formData.purchase_url || ''} onChange={e => setFormData({...formData, purchase_url: e.target.value})} className="border p-1 rounded" />
@@ -161,7 +168,9 @@ export default function AdminDashboard() {
           <>
             {renderThemeForm()}
             <div className="bg-white rounded shadow overflow-x-auto">
-              <table className="w-full text-sm"><thead className="bg-gray-200"><tr><th className="p-2">الاسم</th><th>المنصة</th><th>الباقة</th><th>المتاجر</th><th></th></tr></thead><tbody>{themes.map(t => (<tr key={t.id} className="border-b"><td className="p-2">{t.name}</td><td>{t.platform}</td><td>{t.plan}</td><td>{t.stores_count}</td><td className="flex gap-1"><button onClick={() => { setEditingTheme(t); setFormData(t); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button><button onClick={() => handleThemeReset(t.id)} className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs">Reset</button><button onClick={() => handleThemeDelete(t.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button><button onClick={() => handleThemeReorder(t.id,'up')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↑</button><button onClick={() => handleThemeReorder(t.id,'down')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↓</button></td></tr>))}</tbody></table>
+              <table className="w-full text-sm"><thead className="bg-gray-200">…
+                <th className="p-2">الاسم</th><th>المنصة</th><th>الباقة</th><th>المتاجر</th><th></th>
+              </thead><tbody>{themes.map(t => (<tr key={t.id} className="border-b"><td className="p-2">{t.name}</td><td>{t.platform}</td><td>{t.plan === 'starter' ? '🚀 انطلاق' : t.plan === 'growth' ? '🌟 نمو' : t.plan === 'gold' ? '👑 ذهبية' : 'بدون باقة'}</td><td>{t.stores_count}</td><td className="flex gap-1"><button onClick={() => { setEditingTheme(t); setFormData({ ...t, plan: t.plan || 'none' }); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button><button onClick={() => handleThemeReset(t.id)} className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs">Reset</button><button onClick={() => handleThemeDelete(t.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button><button onClick={() => handleThemeReorder(t.id,'up')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↑</button><button onClick={() => handleThemeReorder(t.id,'down')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↓</button></td></tr>))}</tbody></table>
             </div>
           </>
         )}
@@ -169,7 +178,9 @@ export default function AdminDashboard() {
           <>
             {renderStoreForm()}
             <div className="bg-white rounded shadow overflow-x-auto">
-              <table className="w-full text-sm"><thead className="bg-gray-200"><tr><th>اسم المتجر</th><th>الرابط</th><th>الثيم</th><th>المنصة</th><th>الباقة</th><th>الصورة</th><th></th></tr></thead><tbody>{storeLinks.map(s => { const themeName = themes.find(t => t.id === s.theme_id)?.name || 'غير معروف'; return (<tr key={s.id} className="border-b"><td className="p-2">{s.store_name}</td><td className="truncate max-w-xs">{s.store_url}</td><td>{themeName}</td><td>{s.platform}</td><td>{s.plan === 'starter' ? '🚀 انطلاق' : s.plan === 'growth' ? '🌟 نمو' : s.plan === 'gold' ? '👑 ذهبية' : 'بدون باقة'}</td><td>{s.image_url ? <img src={s.image_url} className="w-8 h-8 object-cover rounded" alt="store" /> : 'لا توجد'}</td><td className="flex gap-1"><button onClick={() => { setEditingStoreLink(s); setFormData({ theme_id: s.theme_id, store_name: s.store_name, store_url: s.store_url, platform: s.platform, plan: s.plan || 'none' }); setPreviewUrl(null); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button><button onClick={() => handleStoreDelete(s.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button></td></tr>); })}</tbody></table>
+              <table className="w-full text-sm"><thead className="bg-gray-200">…
+                <th>اسم المتجر</th><th>الرابط</th><th>الثيم</th><th>المنصة</th><th>الباقة</th><th>الصورة</th><th></th>
+              </thead><tbody>{storeLinks.map(s => { const themeName = themes.find(t => t.id === s.theme_id)?.name || 'غير معروف'; return (<tr key={s.id} className="border-b"><td>{s.store_name}</td><td className="truncate max-w-xs">{s.store_url}</td><td>{themeName}</td><td>{s.platform}</td><td>{s.plan === 'starter' ? '🚀 انطلاق' : s.plan === 'growth' ? '🌟 نمو' : s.plan === 'gold' ? '👑 ذهبية' : 'بدون باقة'}</td><td>{s.image_url ? <img src={s.image_url} className="w-8 h-8 object-cover rounded" alt="store" /> : 'لا توجد'}</td><td className="flex gap-1"><button onClick={() => { setEditingStoreLink(s); setFormData({ theme_id: s.theme_id, store_name: s.store_name, store_url: s.store_url, platform: s.platform, plan: s.plan || 'none' }); setPreviewUrl(null); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button><button onClick={() => handleStoreDelete(s.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button></td></tr>); })}</tbody></table>
             </div>
           </>
         )}

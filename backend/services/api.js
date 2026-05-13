@@ -2,15 +2,17 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
+// تعديل getAllThemes لاستقبال search
 export const getAllThemes = async (platform = null, plan = null, search = null) => {
   const params = new URLSearchParams();
   if (platform) params.append('platform', platform);
   if (plan) params.append('plan', plan);
-  if (search) params.append('search', search);
+  if (search && search.trim() !== '') params.append('search', search);
   const res = await axios.get(`${API_BASE_URL}/themes?${params.toString()}`);
   return res.data;
 };
 
+// باقي الدوال كما هي (لن نكررها كلها، لكن تأكد من وجود createStoreLink, updateStoreLink ...)
 export const getThemeById = async (id) => {
   const res = await axios.get(`${API_BASE_URL}/themes/${id}`);
   return res.data;
