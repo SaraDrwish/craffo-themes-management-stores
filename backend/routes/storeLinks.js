@@ -26,6 +26,16 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = express.Router();
 
+// Helper to validate URL format
+function isValidUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
 router.get('/', async (req, res) => {
   const { theme_id, platform, search, plan } = req.query;
   let sql = `
@@ -70,16 +80,19 @@ router.get('/:id', async (req, res) => {
 // POST – إضافة متجر مع صورة
 router.post('/', verifyAdmin, (req, res) => {
   upload.single('image')(req, res, async (err) => {
-    if (err) {
-      console.error('❌ Multer error:', err);
-      return res.status(400).json({ error: 'خطأ في رفع الصورة: ' + err.message });
-    }
+    if (err) return res.status(400).json({ error: 'خطأ في رفع الصورة: ' + err.message });
     const { theme_id, store_name, store_url, platform, plan } = req.body;
     console.log('📥 Received:', { theme_id, store_name, store_url, platform, plan, file: req.file });
 
     if (!theme_id || !store_name || !store_url || !platform) {
       if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+    }
+
+    // التحقق من صحة الرابط
+    if (!isValidUrl(store_url)) {
+      if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'الرابط غير صالح. يجب أن يبدأ بـ http:// أو https://' });
     }
 
     try {
@@ -109,7 +122,7 @@ router.post('/', verifyAdmin, (req, res) => {
   });
 });
 
-// PUT – تعديل متجر مع صورة اختيارية
+// PUT – تعديل متجر
 router.put('/:id', verifyAdmin, (req, res) => {
   upload.single('image')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: 'خطأ في رفع الصورة' });
@@ -121,6 +134,10 @@ router.put('/:id', verifyAdmin, (req, res) => {
         return res.status(404).json({ error: 'المتجر غير موجود' });
       }
       if (store_url && store_url !== current.store_url) {
+        if (!isValidUrl(store_url)) {
+          if (req.file) fs.unlinkSync(req.file.path);
+          return res.status(400).json({ error: 'الرابط غير صالح' });
+        }
         const existing = await get('SELECT id FROM store_links WHERE store_url = ? AND id != ?', [store_url, req.params.id]);
         if (existing) {
           if (req.file) fs.unlinkSync(req.file.path);

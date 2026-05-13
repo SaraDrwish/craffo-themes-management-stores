@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import ThemeCard from '../components/ThemeCard';
 import Filters from '../components/Filters';
 import Footer from '../components/Footer';
-import { getAllThemes } from '../services/api';
+import { getAllThemes, getAllStoreLinks } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HomePage() {
@@ -13,6 +13,7 @@ export default function HomePage() {
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [storeNames, setStoreNames] = useState([]); // لتخزين أسماء المتاجر لكل ثيم
 
   useEffect(() => {
     loadThemes();
@@ -22,19 +23,37 @@ export default function HomePage() {
     setLoading(true);
     const plan = planFilter === 'all' ? null : planFilter;
     const platformParam = platform === 'all' ? null : platform;
-    const data = await getAllThemes(platformParam, plan, search);
+    const data = await getAllThemes(platformParam, plan);
     setThemes(data);
+    // جلب أسماء المتاجر لكل ثيم للبحث
+    const storeMap = {};
+    for (const theme of data) {
+      const stores = await getAllStoreLinks({ theme_id: theme.id });
+      storeMap[theme.id] = stores.map(s => s.store_name.toLowerCase());
+    }
+    setStoreNames(storeMap);
     setFiltered(data);
     setLoading(false);
   }
 
   useEffect(() => {
-    // إذا لم يتغير search، لا داعي لإعادة تحميل
-    const timer = setTimeout(() => {
-      loadThemes();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    if (!search.trim()) {
+      setFiltered(themes);
+      return;
+    }
+    const lowerSearch = search.toLowerCase();
+    const filteredData = themes.filter(theme => {
+      // البحث في اسم الثيم
+      if (theme.name.toLowerCase().includes(lowerSearch)) return true;
+      // البحث في وصف الثيم
+      if (theme.description && theme.description.toLowerCase().includes(lowerSearch)) return true;
+      // البحث في أسماء المتاجر المرتبطة
+      const storesForTheme = storeNames[theme.id] || [];
+      if (storesForTheme.some(storeName => storeName.includes(lowerSearch))) return true;
+      return false;
+    });
+    setFiltered(filteredData);
+  }, [search, themes, storeNames]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -61,7 +80,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        <Filters search={search} setSearch={setSearch} />
+        <Filters search={search} setSearch={setSearch} placeholder="ابحث باسم الثيم أو المتجر..." />
 
         {loading ? (
           <div className="text-center py-20">جاري التحميل...</div>
@@ -76,9 +95,7 @@ export default function HomePage() {
             </AnimatePresence>
           </motion.div>
         )}
-        {!loading && filtered.length === 0 && (
-          <div className="text-center py-20 text-gray-500">لا توجد ثيمات مطابقة</div>
-        )}
+        {!loading && filtered.length === 0 && <div className="text-center py-20 text-gray-500">لا توجد نتائج مطابقة</div>}
       </div>
       <Footer />
     </div>

@@ -18,12 +18,7 @@ export default function ThemeDetailModal({ themeId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [copiedMessage, setCopiedMessage] = useState('');
 
-  useEffect(() => {
-    getThemeById(themeId).then(data => {
-      setTheme(data);
-      setLoading(false);
-    });
-  }, [themeId]);
+  useEffect(() => { getThemeById(themeId).then(data => { setTheme(data); setLoading(false); }); }, [themeId]);
 
   const copyAllLinks = (stores) => {
     const urls = stores.map(s => s.store_url).join('\n');
@@ -54,16 +49,14 @@ export default function ThemeDetailModal({ themeId, onClose }) {
           {stores.length === 0 && <p className="text-gray-500">لا توجد متاجر مرتبطة بهذا الثيم حتى الآن.</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stores.map(store => {
-              // استخدام الصورة المرفوعة إن وجدت، وإلا صورة افتراضية
+              // استخدام الصورة المرفوعة (image_url) أو رابط افتراضي
               const storeImage = store.image_url || 'https://placehold.co/600x400?text=Store+Preview';
               return (
                 <div key={store.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition bg-white">
                   <div className="relative h-32 bg-gray-100">
                     <img src={storeImage} alt={store.store_name} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://placehold.co/600x400?text=Store+Preview'} />
                     {store.plan && store.plan !== 'none' && (
-                      <div className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold ${planColors[store.plan]}`}>
-                        {planLabels[store.plan]}
-                      </div>
+                      <div className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold ${planColors[store.plan]}`}>{planLabels[store.plan]}</div>
                     )}
                   </div>
                   <div className="p-3">
@@ -80,11 +73,7 @@ export default function ThemeDetailModal({ themeId, onClose }) {
               );
             })}
           </div>
-          {stores.length > 0 && (
-            <button onClick={() => copyAllLinks(stores)} className="mt-6 w-full bg-purple text-white py-2 rounded-lg hover:bg-dark-navy transition">
-              📋 نسخ جميع روابط المتاجر ({stores.length})
-            </button>
-          )}
+          {stores.length > 0 && <button onClick={() => copyAllLinks(stores)} className="mt-6 w-full bg-purple text-white py-2 rounded-lg hover:bg-dark-navy transition">📋 نسخ جميع روابط المتاجر ({stores.length})</button>}
           {copiedMessage && <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">{copiedMessage}</div>}
         </div>
       </motion.div>
