@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
-// Themes
 export const getAllThemes = async (platform = null, plan = null, search = null) => {
   const params = new URLSearchParams();
   if (platform) params.append('platform', platform);
@@ -42,20 +41,23 @@ export const reorderTheme = async (id, direction, token) => {
   return res.data;
 };
 
-// Store Links
 export const getAllStoreLinks = async (filters = {}) => {
   const params = new URLSearchParams(filters);
   const res = await axios.get(`${API_BASE_URL}/store-links?${params.toString()}`);
   return res.data;
 };
 
-export const createStoreLink = async (data, token) => {
-  const res = await axios.post(`${API_BASE_URL}/store-links`, data, { headers: { Authorization: `Bearer ${token}` } });
+export const createStoreLink = async (formData, token) => {
+  const res = await axios.post(`${API_BASE_URL}/store-links`, formData, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+  });
   return res.data;
 };
 
-export const updateStoreLink = async (id, data, token) => {
-  const res = await axios.put(`${API_BASE_URL}/store-links/${id}`, data, { headers: { Authorization: `Bearer ${token}` } });
+export const updateStoreLink = async (id, formData, token) => {
+  const res = await axios.put(`${API_BASE_URL}/store-links/${id}`, formData, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+  });
   return res.data;
 };
 
@@ -64,7 +66,6 @@ export const deleteStoreLink = async (id, token) => {
   return res.data;
 };
 
-// Admin & Auth
 export const adminLogin = async (username, password) => {
   const res = await axios.post(`${API_BASE_URL}/auth/login`, { username, password });
   return res.data;

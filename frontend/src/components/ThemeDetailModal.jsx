@@ -48,30 +48,31 @@ export default function ThemeDetailModal({ themeId, onClose }) {
           <h3 className="text-xl font-bold mt-6 mb-4">المتاجر المرتبطة بهذا الثيم</h3>
           {stores.length === 0 && <p className="text-gray-500">لا توجد متاجر مرتبطة بهذا الثيم حتى الآن.</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {stores.map(store => (
-              <div key={store.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition bg-white">
-                <div className="relative h-32 bg-gray-100">
-                  <img src="https://placehold.co/600x400?text=Store+Preview" alt={store.store_name} className="w-full h-full object-cover" />
-                  {store.plan && store.plan !== 'none' && (
-                    <div className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold ${planColors[store.plan]}`}>{planLabels[store.plan]}</div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h4 className="font-bold text-lg">{store.store_name}</h4>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-purple text-sm">{store.platform}</span>
-                    <div className="flex gap-2">
-                      <a href={store.store_url} target="_blank" className="bg-purple text-white px-2 py-1 rounded text-xs">زيارة</a>
-                      <button onClick={() => { navigator.clipboard.writeText(store.store_url); setCopiedMessage('✅ تم نسخ الرابط'); setTimeout(() => setCopiedMessage(''), 1500); }} className="border border-gray-300 text-gray-600 px-2 py-1 rounded text-xs">نسخ</button>
+            {stores.map(store => {
+              const storeImage = store.image_url || 'https://placehold.co/600x400?text=Store+Preview';
+              return (
+                <div key={store.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition bg-white">
+                  <div className="relative h-32 bg-gray-100">
+                    <img src={storeImage} alt={store.store_name} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://placehold.co/600x400?text=Store+Preview'} />
+                    {store.plan && store.plan !== 'none' && (
+                      <div className={`absolute bottom-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold ${planColors[store.plan]}`}>{planLabels[store.plan]}</div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <h4 className="font-bold text-lg">{store.store_name}</h4>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-purple text-sm">{store.platform}</span>
+                      <div className="flex gap-2">
+                        <a href={store.store_url} target="_blank" className="bg-purple text-white px-2 py-1 rounded text-xs">زيارة</a>
+                        <button onClick={() => { navigator.clipboard.writeText(store.store_url); setCopiedMessage('✅ تم نسخ الرابط'); setTimeout(() => setCopiedMessage(''), 1500); }} className="border border-gray-300 text-gray-600 px-2 py-1 rounded text-xs">نسخ</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          {stores.length > 0 && (
-            <button onClick={() => copyAllLinks(stores)} className="mt-6 w-full bg-purple text-white py-2 rounded-lg hover:bg-dark-navy transition">📋 نسخ جميع روابط المتاجر ({stores.length})</button>
-          )}
+          {stores.length > 0 && <button onClick={() => copyAllLinks(stores)} className="mt-6 w-full bg-purple text-white py-2 rounded-lg hover:bg-dark-navy transition">📋 نسخ جميع روابط المتاجر ({stores.length})</button>}
           {copiedMessage && <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">{copiedMessage}</div>}
         </div>
       </motion.div>

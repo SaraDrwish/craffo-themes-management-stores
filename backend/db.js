@@ -68,6 +68,7 @@ async function initTables() {
       store_url TEXT NOT NULL,
       platform TEXT NOT NULL,
       plan TEXT DEFAULT NULL,
+      image TEXT,
       is_approved INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE
@@ -96,6 +97,6 @@ async function createDefaultAdmin() {
 
 await initTables();
 await createDefaultAdmin();
-console.log('✅ SQLite database ready (store links directly linked to themes)');
+console.log('✅ SQLite database ready (store_links includes image field)');
 
 export { db };
