@@ -17,33 +17,49 @@ export const getThemeById = async (id) => {
 };
 
 export const createTheme = async (data, token) => {
-  const res = await axios.post(`${API_BASE_URL}/themes`, data, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.post(`${API_BASE_URL}/themes`, data, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
 export const updateTheme = async (id, data, token) => {
-  const res = await axios.put(`${API_BASE_URL}/themes/${id}`, data, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.put(`${API_BASE_URL}/themes/${id}`, data, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
 export const deleteTheme = async (id, token) => {
-  const res = await axios.delete(`${API_BASE_URL}/themes/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.delete(`${API_BASE_URL}/themes/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
 export const resetThemeApi = async (id, token) => {
-  const res = await axios.post(`${API_BASE_URL}/themes/${id}/reset-api`, {}, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.post(`${API_BASE_URL}/themes/${id}/reset-api`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
 export const reorderTheme = async (id, direction, token) => {
-  const res = await axios.post(`${API_BASE_URL}/themes/${id}/reorder`, { direction }, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.post(`${API_BASE_URL}/themes/${id}/reorder`, { direction }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
 export const getAllStoreLinks = async (filters = {}) => {
   const params = new URLSearchParams(filters);
   const res = await axios.get(`${API_BASE_URL}/store-links?${params.toString()}`);
+  return res.data;
+};
+
+// ✅ تأكد من وجود هذا السطر بالضبط
+export const getLatestStores = async (limit = 6) => {
+  const res = await axios.get(`${API_BASE_URL}/store-links?limit=${limit}`);
   return res.data;
 };
 
@@ -62,7 +78,9 @@ export const updateStoreLink = async (id, formData, token) => {
 };
 
 export const deleteStoreLink = async (id, token) => {
-  const res = await axios.delete(`${API_BASE_URL}/store-links/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.delete(`${API_BASE_URL}/store-links/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
@@ -72,11 +90,15 @@ export const adminLogin = async (username, password) => {
 };
 
 export const getAdminStats = async (token) => {
-  const res = await axios.get(`${API_BASE_URL}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.get(`${API_BASE_URL}/admin/stats`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
 export const syncNow = async (token) => {
-  const res = await axios.post(`${API_BASE_URL}/admin/sync-now`, {}, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.post(`${API_BASE_URL}/admin/sync-now`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };

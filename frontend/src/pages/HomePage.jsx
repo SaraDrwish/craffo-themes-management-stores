@@ -6,20 +6,19 @@ import Filters from '../components/Filters';
 import Footer from '../components/Footer';
 import { getAllThemes, getAllStoreLinks } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import SearchableSelect from '../components/SearchableSelect';
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('stores'); // 'stores' or 'themes'
-  
-  // State for stores view
+  const [activeTab, setActiveTab] = useState('stores');
   const [stores, setStores] = useState([]);
   const [filteredStores, setFilteredStores] = useState([]);
   const [themesList, setThemesList] = useState([]);
   const [selectedThemeId, setSelectedThemeId] = useState('');
+  const [storePlatformFilter, setStorePlatformFilter] = useState('all');
   const [storePlanFilter, setStorePlanFilter] = useState('all');
   const [storeSearch, setStoreSearch] = useState('');
   const [loadingStores, setLoadingStores] = useState(true);
-
-  // State for themes view
+  const [latestStores, setLatestStores] = useState([]);
   const [platform, setPlatform] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
   const [themes, setThemes] = useState([]);
@@ -27,12 +26,26 @@ export default function HomePage() {
   const [themeSearch, setThemeSearch] = useState('');
   const [loadingThemes, setLoadingThemes] = useState(true);
 
-  // Load data for stores view
+  // جلب أحدث المتاجر (بدون استخدام getLatestStores)
+  async function loadLatestStores() {
+    try {
+      const res = await getAllStoreLinks({ limit: 6 });
+      setLatestStores(res);
+    } catch (err) {
+      console.error('Failed to load latest stores', err);
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'stores') {
+      setSelectedThemeId('');
+      setStorePlatformFilter('all');
+      setStorePlanFilter('all');
+      setStoreSearch('');
       loadStoresData();
+      loadLatestStores();
     }
-  }, [activeTab, selectedThemeId, storePlanFilter]);
+  }, [activeTab]);
 
   async function loadStoresData() {
     setLoadingStores(true);
@@ -40,7 +53,9 @@ export default function HomePage() {
     setThemesList(themesData);
     let filters = {};
     if (selectedThemeId) filters.theme_id = selectedThemeId;
+    if (storePlatformFilter !== 'all') filters.platform = storePlatformFilter;
     if (storePlanFilter !== 'all') filters.plan = storePlanFilter;
+    if (storeSearch) filters.search = storeSearch;
     const storesData = await getAllStoreLinks(filters);
     setStores(storesData);
     setFilteredStores(storesData);
@@ -48,24 +63,11 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    if (!storeSearch.trim()) {
-      setFilteredStores(stores);
-      return;
-    }
-    const lower = storeSearch.toLowerCase();
-    const filtered = stores.filter(s =>
-      s.store_name.toLowerCase().includes(lower) ||
-      s.store_url.toLowerCase().includes(lower) ||
-      (s.theme_name && s.theme_name.toLowerCase().includes(lower))
-    );
-    setFilteredStores(filtered);
-  }, [storeSearch, stores]);
+    if (activeTab === 'stores') loadStoresData();
+  }, [selectedThemeId, storePlatformFilter, storePlanFilter, storeSearch]);
 
-  // Load data for themes view
   useEffect(() => {
-    if (activeTab === 'themes') {
-      loadThemesData();
-    }
+    if (activeTab === 'themes') loadThemesData();
   }, [activeTab, platform, planFilter]);
 
   async function loadThemesData() {
@@ -79,50 +81,55 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    if (!themeSearch.trim()) {
-      setFilteredThemes(themes);
-      return;
-    }
+    if (!themeSearch.trim()) { setFilteredThemes(themes); return; }
     const lower = themeSearch.toLowerCase();
-    const filtered = themes.filter(t =>
-      t.name.toLowerCase().includes(lower) ||
-      (t.description && t.description.toLowerCase().includes(lower))
-    );
+    const filtered = themes.filter(t => t.name.toLowerCase().includes(lower) || (t.description && t.description.toLowerCase().includes(lower)));
     setFilteredThemes(filtered);
   }, [themeSearch, themes]);
+
+  const resetStoreFilters = () => {
+    setSelectedThemeId('');
+    setStorePlatformFilter('all');
+    setStorePlanFilter('all');
+    setStoreSearch('');
+  };
+
+  const themeOptions = themesList.map(theme => ({ value: theme.id, label: theme.name }));
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="container mx-auto px-4 py-6 flex-1">
-        {/* Tabs */}
         <div className="flex justify-center gap-6 mb-8">
-          <button
-            onClick={() => setActiveTab('stores')}
-            className={`px-8 py-2 rounded-full font-bold transition ${
-              activeTab === 'stores'
-                ? 'bg-dark-navy text-white shadow-lg'
-                : 'bg-light-mauve text-dark-navy'
-            }`}
-          >
-            جميع المتاجر
-          </button>
-          <button
-            onClick={() => setActiveTab('themes')}
-            className={`px-8 py-2 rounded-full font-bold transition ${
-              activeTab === 'themes'
-                ? 'bg-dark-navy text-white shadow-lg'
-                : 'bg-light-mauve text-dark-navy'
-            }`}
-          >
-            الثيمات
-          </button>
+          <button onClick={() => setActiveTab('stores')} className={`px-8 py-2 rounded-full font-bold transition ${activeTab === 'stores' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>جميع المتاجر</button>
+          <button onClick={() => setActiveTab('themes')} className={`px-8 py-2 rounded-full font-bold transition ${activeTab === 'themes' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>الثيمات</button>
         </div>
 
-        {/* ========== Stores Tab ========== */}
         {activeTab === 'stores' && (
           <>
-            {/* Filter by plan */}
+            {latestStores.length > 0 && (
+              <div className="mb-10">
+                <h2 className="text-xl font-bold text-dark-navy mb-4">✨ أحدث المتاجر المضافة</h2>
+                <div className="overflow-x-auto whitespace-nowrap pb-4 scroll-smooth">
+                  <div className="flex gap-4" style={{ direction: 'ltr' }}>
+                    {latestStores.map(store => (
+                      <div key={store.id} className="inline-block w-72" style={{ direction: 'rtl' }}>
+                        <StoreCard store={store} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-center gap-3 mb-6 flex-wrap">
+              {[
+                { value: 'all', label: '🎯 الكل' },
+                { value: 'Salla', label: '🛒 سلة' },
+                { value: 'Zid', label: '📦 زد' }
+              ].map(filter => (
+                <button key={filter.value} onClick={() => setStorePlatformFilter(filter.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlatformFilter === filter.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{filter.label}</button>
+              ))}
+            </div>
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
               {[
                 { value: 'all', label: '🎯 كل الباقات' },
@@ -130,132 +137,52 @@ export default function HomePage() {
                 { value: 'growth', label: '🌟 باقة النمو' },
                 { value: 'gold', label: '👑 الباقة الذهبية' }
               ].map(plan => (
-                <button
-                  key={plan.value}
-                  onClick={() => setStorePlanFilter(plan.value)}
-                  className={`px-4 py-1 rounded-full text-sm font-semibold transition ${
-                    storePlanFilter === plan.value
-                      ? 'bg-dark-navy text-white'
-                      : 'bg-gray-200 text-dark-navy hover:bg-purplelight'
-                  }`}
-                >
-                  {plan.label}
-                </button>
+                <button key={plan.value} onClick={() => setStorePlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlanFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{plan.label}</button>
               ))}
             </div>
-
-            {/* Filter by theme - Dropdown */}
-            <div className="flex justify-center mb-6">
-              <select
-                value={selectedThemeId}
-                onChange={(e) => setSelectedThemeId(e.target.value)}
-                className="px-4 py-2 rounded-full border border-purplelight bg-white text-dark-navy focus:outline-none focus:ring-2 focus:ring-purple transition cursor-pointer"
-              >
-                <option value="">كل الثيمات</option>
-                {themesList.map(theme => (
-                  <option key={theme.id} value={theme.id}>
-                    {theme.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Search */}
-            <Filters
-              search={storeSearch}
-              setSearch={setStoreSearch}
-              placeholder="ابحث باسم المتجر أو الرابط..."
-            />
-
-            {loadingStores ? (
-              <div className="text-center py-20">جاري التحميل...</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                {filteredStores.map(store => (
-                  <StoreCard key={store.id} store={store} />
-                ))}
+            <div className="flex justify-center gap-4 mb-6 flex-wrap">
+              <div className="w-64">
+                <SearchableSelect
+                  options={themeOptions}
+                  value={selectedThemeId}
+                  onChange={setSelectedThemeId}
+                  placeholder="كل الثيمات"
+                />
               </div>
+              <button onClick={resetStoreFilters} className="px-4 py-2 rounded-full bg-purple text-white hover:bg-dark-navy transition">إعادة تعيين الفلاتر</button>
+            </div>
+            <Filters search={storeSearch} setSearch={setStoreSearch} placeholder="ابحث باسم المتجر أو الرابط..." />
+            {loadingStores ? <div className="text-center py-20">جاري التحميل...</div> : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">{filteredStores.map(store => <StoreCard key={store.id} store={store} />)}</div>
             )}
-            {!loadingStores && filteredStores.length === 0 && (
-              <div className="text-center py-20 text-gray-500">لا توجد متاجر مطابقة</div>
-            )}
+            {!loadingStores && filteredStores.length === 0 && <div className="text-center py-20 text-gray-500">لا توجد متاجر مطابقة</div>}
           </>
         )}
 
-        {/* ========== Themes Tab ========== */}
         {activeTab === 'themes' && (
           <>
-            {/* Platform filters */}
             <div className="flex justify-center gap-6 mb-8">
-              <button
-                onClick={() => setPlatform('all')}
-                className={`px-6 py-2 rounded-full font-bold transition ${
-                  platform === 'all' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'
-                }`}
-              >
-                الكل
-              </button>
-              <button
-                onClick={() => setPlatform('Salla')}
-                className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition ${
-                  platform === 'Salla' ? 'bg-purple text-white shadow-lg' : 'bg-light-mauve text-dark-navy'
-                }`}
-              >
-                <img src="https://asas-tools.com/u/uploads/sara_craffo/sallah-logo.png" alt="Salla" className="w-6 h-6" />
-                سلة
-              </button>
-              <button
-                onClick={() => setPlatform('Zid')}
-                className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition ${
-                  platform === 'Zid' ? 'bg-purple text-white shadow-lg' : 'bg-light-mauve text-dark-navy'
-                }`}
-              >
-                <img src="https://asas-tools.com/u/uploads/sara_craffo/zid-logo.png" alt="Zid" className="w-6 h-6" />
-                زد
-              </button>
+              <button onClick={() => setPlatform('all')} className={`px-6 py-2 rounded-full font-bold transition ${platform === 'all' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>الكل</button>
+              <button onClick={() => setPlatform('Salla')} className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition ${platform === 'Salla' ? 'bg-purple text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}><img src="https://asas-tools.com/u/uploads/sara_craffo/sallah-logo.png" alt="Salla" className="w-6 h-6" /> سلة</button>
+              <button onClick={() => setPlatform('Zid')} className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition ${platform === 'Zid' ? 'bg-purple text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}><img src="https://asas-tools.com/u/uploads/sara_craffo/zid-logo.png" alt="Zid" className="w-6 h-6" /> زد</button>
             </div>
-
-            {/* Plan filter */}
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
               {[
                 { value: 'all', label: '🎯 الكل' },
                 { value: 'starter', label: '🚀 باقة الانطلاق' },
                 { value: 'growth', label: '🌟 باقة النمو' },
                 { value: 'gold', label: '👑 الباقة الذهبية' }
-              ].map(plan => (
-                <button
-                  key={plan.value}
-                  onClick={() => setPlanFilter(plan.value)}
-                  className={`px-4 py-1 rounded-full text-sm font-semibold transition ${
-                    planFilter === plan.value
-                      ? 'bg-dark-navy text-white'
-                      : 'bg-gray-200 text-dark-navy hover:bg-purplelight'
-                  }`}
-                >
-                  {plan.label}
-                </button>
-              ))}
+              ].map(plan => <button key={plan.value} onClick={() => setPlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${planFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{plan.label}</button>)}
             </div>
-
-            {/* Search */}
             <Filters search={themeSearch} setSearch={setThemeSearch} placeholder="ابحث باسم الثيم..." />
-
-            {loadingThemes ? (
-              <div className="text-center py-20">جاري التحميل...</div>
-            ) : (
+            {loadingThemes ? <div className="text-center py-20">جاري التحميل...</div> : (
               <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                 <AnimatePresence>
-                  {filteredThemes.map(theme => (
-                    <motion.div key={theme.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                      <ThemeCard theme={theme} platform={theme.platform} />
-                    </motion.div>
-                  ))}
+                  {filteredThemes.map(theme => <motion.div key={theme.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><ThemeCard theme={theme} platform={theme.platform} /></motion.div>)}
                 </AnimatePresence>
               </motion.div>
             )}
-            {!loadingThemes && filteredThemes.length === 0 && (
-              <div className="text-center py-20 text-gray-500">لا توجد ثيمات مطابقة</div>
-            )}
+            {!loadingThemes && filteredThemes.length === 0 && <div className="text-center py-20 text-gray-500">لا توجد ثيمات مطابقة</div>}
           </>
         )}
       </div>
