@@ -37,7 +37,6 @@ export function all(sql, params = []) {
 async function initTables() {
   await run(`PRAGMA foreign_keys = ON;`);
 
-  // جدول الثيمات
   await run(`
     CREATE TABLE IF NOT EXISTS themes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,7 +60,6 @@ async function initTables() {
     )
   `);
 
-  // جدول المتاجر (مرتبط مباشرة بالثيم)
   await run(`
     CREATE TABLE IF NOT EXISTS store_links (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,10 +74,8 @@ async function initTables() {
     )
   `);
 
-  // فهرس فريد لمنع تكرار الرابط
   await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_store_url ON store_links (store_url)`);
 
-  // جدول الأدمن
   await run(`
     CREATE TABLE IF NOT EXISTS admin_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,8 +83,6 @@ async function initTables() {
       password_hash TEXT NOT NULL
     )
   `);
-
-  // تجاهل جدول categories القديم إذا كان موجوداً – لا نستخدمه
 }
 
 async function createDefaultAdmin() {
@@ -102,6 +96,6 @@ async function createDefaultAdmin() {
 
 await initTables();
 await createDefaultAdmin();
-console.log('✅ SQLite database ready (store_links linked directly to themes)');
+console.log('✅ SQLite database ready (store links directly linked to themes)');
 
-export default { run, get, all, db };
+export { db };

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
-// ============== الثيمات ==============
+// ============== Themes ==============
 export const getAllThemes = async (platform = null, plan = null, search = null) => {
   const params = new URLSearchParams();
   if (platform) params.append('platform', platform);
@@ -52,7 +52,7 @@ export const reorderTheme = async (id, direction, token) => {
   return res.data;
 };
 
-// ============== المتاجر (مرتبطة مباشرة بالثيم) ==============
+// ============== Store Links (directly linked to theme) ==============
 export const getAllStoreLinks = async (filters = {}) => {
   const params = new URLSearchParams(filters);
   const res = await axios.get(`${API_BASE_URL}/store-links?${params.toString()}`);
@@ -80,7 +80,7 @@ export const deleteStoreLink = async (id, token) => {
   return res.data;
 };
 
-// ============== المصادقة والإدارة ==============
+// ============== Admin & Auth ==============
 export const adminLogin = async (username, password) => {
   const res = await axios.post(`${API_BASE_URL}/auth/login`, { username, password });
   return res.data;
