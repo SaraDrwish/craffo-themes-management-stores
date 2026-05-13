@@ -4,9 +4,26 @@ import { getAllThemes, createTheme, updateTheme, deleteTheme, resetThemeApi, reo
          getAdminStats, syncNow } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
+// دالة لتوليد رابط عشوائي فريد
+function generateRandomUrl() {
+  const randomId = Math.floor(Math.random() * 1000000);
+  return `https://example.com/store-${randomId}`;
+}
+
+// دالة لتوليد اسم متجر عشوائي
+function generateRandomStoreName() {
+  const names = ['متجر تجريبي', 'متجر عشوائي', 'متجر جديد', 'Store', 'Demo Shop', 'Test Store'];
+  const randomIndex = Math.floor(Math.random() * names.length);
+  const randomNum = Math.floor(Math.random() * 1000);
+  return `${names[randomIndex]} ${randomNum}`;
+}
+
+// الصورة الافتراضية الثابتة
+const DEFAULT_STORE_IMAGE = 'https://asas-tools.com/u/uploads/sara_craffo/Screenshot%202026-05-13%20213456.png';
+
 export default function AdminDashboard() {
   const { token, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('themes');
+  const [activeTab, setActiveTab] = useState('stores'); // default 'stores'
   const [themes, setThemes] = useState([]);
   const [storeLinks, setStoreLinks] = useState([]);
   const [stats, setStats] = useState({ themes: 0, stores: 0 });
@@ -23,11 +40,18 @@ export default function AdminDashboard() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Bulk import state
+  const [bulkUrls, setBulkUrls] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const [importStop, setImportStop] = useState(false);
+  const [selectedBulkThemeId, setSelectedBulkThemeId] = useState('');
+
   useEffect(() => {
     fetchStats();
-    if (activeTab === 'themes') fetchThemes();
-    if (activeTab === 'stores') fetchStoreLinks();
-  }, [activeTab, token]);
+    fetchThemes();
+    fetchStoreLinks();
+  }, [token]);
 
   async function fetchStats() { const data = await getAdminStats(token); setStats(data); }
   async function fetchThemes() { const data = await getAllThemes(); setThemes(data); }
@@ -35,6 +59,7 @@ export default function AdminDashboard() {
 
   const handleSync = async () => { await syncNow(token); await fetchThemes(); await fetchStats(); alert('تمت المزامنة'); };
 
+  // ========== Theme handlers ==========
   const handleThemeSave = async () => {
     try {
       if (editingTheme) await updateTheme(editingTheme.id, formData, token);
@@ -46,12 +71,12 @@ export default function AdminDashboard() {
   const handleThemeReset = async (id) => { if (confirm('إعادة تعيين بيانات API؟')) { await resetThemeApi(id, token); fetchThemes(); } };
   const handleThemeReorder = async (id, direction) => { await reorderTheme(id, direction, token); fetchThemes(); };
 
+  // ========== Store handlers ==========
   const handleStoreSave = async () => {
     if (!formData.theme_id || !formData.store_name || !formData.store_url || !formData.platform) {
       setErrorMsg('الرجاء ملء جميع الحقول');
       return;
     }
-    // التحقق من صحة الرابط على الواجهة أيضاً
     const urlPattern = /^https?:\/\/.+/i;
     if (!urlPattern.test(formData.store_url)) {
       setErrorMsg('الرابط غير صالح. يجب أن يبدأ بـ http:// أو https://');
@@ -64,6 +89,7 @@ export default function AdminDashboard() {
     payload.append('platform', formData.platform);
     payload.append('plan', formData.plan);
     if (imageFile) payload.append('image', imageFile);
+    else payload.append('image', DEFAULT_STORE_IMAGE); // إرسال الصورة الافتراضية كرابط إذا لم يرفع ملف
     try {
       if (editingStoreLink) await updateStoreLink(editingStoreLink.id, payload, token);
       else await createStoreLink(payload, token);
@@ -77,10 +103,104 @@ export default function AdminDashboard() {
   };
   const handleStoreDelete = async (id) => { if (confirm('حذف المتجر؟')) { await deleteStoreLink(id, token); fetchStoreLinks(); fetchStats(); } };
 
+  // ========== Bulk import (queue) ==========
+  const startBulkImport = async () => {
+    if (!bulkUrls.trim()) {
+      alert('الرجاء إدخال روابط (واحد في كل سطر)');
+      return;
+    }
+    if (!selectedBulkThemeId) {
+      alert('الرجاء اختيار ثيم للمتاجر المضافة');
+      return;
+    }
+    setIsImporting(true);
+    setImportStop(false);
+    const lines = bulkUrls.split(/\r?\n/);
+    const urls = [];
+    for (let line of lines) {
+      line = line.trim();
+      if (line && !line.startsWith('#')) {
+        // التحقق من صحة الرابط (يحتوي على http)
+        if (line.match(/^https?:\/\/.+/i)) {
+          urls.push(line);
+        } else {
+          console.warn('تخطي رابط غير صالح:', line);
+        }
+      }
+    }
+    const total = urls.length;
+    setImportProgress({ current: 0, total });
+    for (let i = 0; i < urls.length; i++) {
+      if (importStop) break;
+      const url = urls[i];
+      const storeName = `متجر مستورد ${i+1}`;
+      // إعداد البيانات
+      const payload = new FormData();
+      payload.append('theme_id', selectedBulkThemeId);
+      payload.append('store_name', storeName);
+      payload.append('store_url', url);
+      payload.append('platform', 'Salla');
+      payload.append('plan', 'none');
+      payload.append('image', DEFAULT_STORE_IMAGE);
+      try {
+        await createStoreLink(payload, token);
+        setImportProgress({ current: i+1, total });
+        // تحديث القائمة تدريجياً (اختياري)
+        if ((i+1) % 5 === 0 || i === total-1) {
+          await fetchStoreLinks();
+        }
+      } catch (err) {
+        console.error(`فشل إضافة الرابط ${url}:`, err.response?.data?.error || err.message);
+      }
+      // تأخير بسيط بين الإضافات لتجنب إرهاق الخادم
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    setIsImporting(false);
+    setImportStop(false);
+    await fetchStoreLinks();
+    alert('تمت عملية الإضافة المجمعة');
+  };
+
+  const stopBulkImport = () => {
+    setImportStop(true);
+  };
+
+  // ========== Set random default values for new store ==========
+  const setRandomDefaultStore = () => {
+    if (themes.length === 0) return;
+    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+    const randomName = generateRandomStoreName();
+    const randomUrl = generateRandomUrl();
+    setFormData({
+      theme_id: randomTheme.id.toString(),
+      store_name: randomName,
+      store_url: randomUrl,
+      platform: 'Salla',
+      plan: 'none'
+    });
+    setImageFile(null);
+    setPreviewUrl(null);
+    setErrorMsg('');
+  };
+
+  // عند تحميل الثيمات لأول مرة، نضع قيماً افتراضية عشوائية
+  useEffect(() => {
+    if (themes.length > 0 && !formData.theme_id && activeTab === 'stores') {
+      setRandomDefaultStore();
+    }
+  }, [themes, activeTab]);
+
   const resetForm = () => {
-    setEditingTheme(null); setEditingStoreLink(null);
-    setFormData({ theme_id: '', store_name: '', store_url: '', platform: 'Salla', plan: 'none' });
-    setImageFile(null); setPreviewUrl(null); setErrorMsg('');
+    setEditingTheme(null);
+    setEditingStoreLink(null);
+    if (activeTab === 'stores' && themes.length > 0) {
+      setRandomDefaultStore();
+    } else {
+      setFormData({ theme_id: '', store_name: '', store_url: '', platform: 'Salla', plan: 'none' });
+    }
+    setImageFile(null);
+    setPreviewUrl(null);
+    setErrorMsg('');
   };
 
   const handleImageChange = (e) => {
@@ -91,10 +211,12 @@ export default function AdminDashboard() {
       reader.onloadend = () => setPreviewUrl(reader.result);
       reader.readAsDataURL(file);
     } else {
-      setImageFile(null); setPreviewUrl(null);
+      setImageFile(null);
+      setPreviewUrl(null);
     }
   };
 
+  // ========== Render forms ==========
   const renderThemeForm = () => (
     <div className="bg-white p-4 rounded-lg mb-4">
       <h3 className="font-bold mb-2">{editingTheme ? 'تعديل ثيم' : 'إضافة ثيم جديد'}</h3>
@@ -125,7 +247,7 @@ export default function AdminDashboard() {
     <div className="bg-white p-4 rounded-lg mb-4">
       <h3 className="font-bold mb-2">{editingStoreLink ? 'تعديل متجر' : 'إضافة متجر جديد'}</h3>
       <div className="space-y-3">
-        <select value={formData.theme_id} onChange={e => setFormData({...formData, theme_id: parseInt(e.target.value)})} className="border p-2 rounded w-full">
+        <select value={formData.theme_id} onChange={e => setFormData({...formData, theme_id: e.target.value})} className="border p-2 rounded w-full">
           <option value="">-- اختر الثيم --</option>
           {themes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
@@ -141,7 +263,7 @@ export default function AdminDashboard() {
           <option value="gold">👑 الباقة الذهبية</option>
         </select>
         <div className="border p-2 rounded">
-          <label className="block text-sm font-medium mb-1">صورة المتجر (اختياري)</label>
+          <label className="block text-sm font-medium mb-1">صورة المتجر (اختياري – إذا لم ترفع تستخدم الصورة الافتراضية)</label>
           <input type="file" accept="image/*" onChange={handleImageChange} className="w-full" />
           {previewUrl && <img src={previewUrl} className="mt-2 w-24 h-24 object-cover rounded" alt="preview" />}
           {!previewUrl && editingStoreLink && editingStoreLink.image_url && <img src={editingStoreLink.image_url} className="mt-2 w-24 h-24 object-cover rounded" alt="current" />}
@@ -150,6 +272,46 @@ export default function AdminDashboard() {
         <button onClick={handleStoreSave} className="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600">{editingStoreLink ? 'تحديث المتجر' : 'حفظ المتجر'}</button>
         {editingStoreLink && <button onClick={resetForm} className="bg-gray-400 text-white px-4 py-2 rounded w-full mt-2">إلغاء التعديل</button>}
       </div>
+    </div>
+  );
+
+  // ========== Bulk import UI ==========
+  const renderBulkImport = () => (
+    <div className="bg-white p-4 rounded-lg mb-4 border-2 border-dashed border-purple-300">
+      <h3 className="font-bold mb-2 text-purple-700">إضافة مجمّعة (طابور)</h3>
+      <p className="text-sm text-gray-600 mb-2">أدخل رابطًا واحدًا في كل سطر (أو سطر يبدأ بـ # كتعليق يُتخطّى). تُضاف الروابط واحدًا تلو الآخر حتى يكتمل الجلب دون إرهاق الخادم.</p>
+      <textarea
+        rows={6}
+        className="border p-2 rounded w-full font-mono text-sm"
+        placeholder="https://example.com/store1&#10;https://example.com/store2&#10;# هذا تعليق&#10;https://example.com/store3"
+        value={bulkUrls}
+        onChange={(e) => setBulkUrls(e.target.value)}
+        disabled={isImporting}
+      />
+      <div className="flex flex-wrap gap-3 mt-3 items-center">
+        <select
+          value={selectedBulkThemeId}
+          onChange={(e) => setSelectedBulkThemeId(e.target.value)}
+          className="border p-2 rounded"
+          disabled={isImporting}
+        >
+          <option value="">-- اختر ثيم لكل المتاجر --</option>
+          {themes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        {!isImporting ? (
+          <button onClick={startBulkImport} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">بدء الإضافة المجمعة</button>
+        ) : (
+          <button onClick={stopBulkImport} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">إيقاف الطابور</button>
+        )}
+      </div>
+      {isImporting && importProgress.total > 0 && (
+        <div className="mt-3">
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}></div>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">تمت إضافة {importProgress.current} من {importProgress.total} رابط</p>
+        </div>
+      )}
     </div>
   );
 
@@ -164,8 +326,8 @@ export default function AdminDashboard() {
         </div>
       </div>
       <div className="flex border-b bg-white">
-        <button onClick={() => setActiveTab('themes')} className={`px-6 py-3 ${activeTab === 'themes' ? 'border-b-2 border-purple text-purple font-bold' : ''}`}>الثيمات</button>
-        <button onClick={() => setActiveTab('stores')} className={`px-6 py-3 ${activeTab === 'stores' ? 'border-b-2 border-purple text-purple font-bold' : ''}`}>المتاجر</button>
+        <button onClick={() => { setActiveTab('themes'); resetForm(); }} className={`px-6 py-3 ${activeTab === 'themes' ? 'border-b-2 border-purple text-purple font-bold' : ''}`}>الثيمات</button>
+        <button onClick={() => { setActiveTab('stores'); resetForm(); }} className={`px-6 py-3 ${activeTab === 'stores' ? 'border-b-2 border-purple text-purple font-bold' : ''}`}>المتاجر</button>
       </div>
       <div className="p-4">
         {activeTab === 'themes' && (
@@ -200,6 +362,7 @@ export default function AdminDashboard() {
         {activeTab === 'stores' && (
           <>
             {renderStoreForm()}
+            {renderBulkImport()}
             <div className="bg-white rounded shadow overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-200">
