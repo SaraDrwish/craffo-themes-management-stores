@@ -8,6 +8,15 @@ import { getAllThemes, getAllStoreLinks } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import SearchableSelect from '../components/SearchableSelect';
 
+// استيراد Swiper
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+
+// استيراد الأنماط الأساسية لـ Swiper
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('stores');
   const [stores, setStores] = useState([]);
@@ -26,10 +35,11 @@ export default function HomePage() {
   const [themeSearch, setThemeSearch] = useState('');
   const [loadingThemes, setLoadingThemes] = useState(true);
 
-  // جلب أحدث المتاجر (بدون استخدام getLatestStores)
+  // جلب أحدث المتاجر
   async function loadLatestStores() {
     try {
-      const res = await getAllStoreLinks({ limit: 6 });
+      // جلب عدد كافٍ من المتاجر (مثلاً 12) لتجربة السلايدر الدائري بشكل جيد
+      const res = await getAllStoreLinks({ limit: 12 });
       setLatestStores(res);
     } catch (err) {
       console.error('Failed to load latest stores', err);
@@ -107,20 +117,38 @@ export default function HomePage() {
 
         {activeTab === 'stores' && (
           <>
+            {/* سلايدر أحدث المتاجر - Swiper loop */}
             {latestStores.length > 0 && (
-              <div className="mb-10">
-                <h2 className="text-xl font-bold text-dark-navy mb-4">✨ أحدث المتاجر المضافة</h2>
-                <div className="overflow-x-auto whitespace-nowrap pb-4 scroll-smooth">
-                  <div className="flex gap-4" style={{ direction: 'ltr' }}>
-                    {latestStores.map(store => (
-                      <div key={store.id} className="inline-block w-72" style={{ direction: 'rtl' }}>
-                        <StoreCard store={store} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="mb-12">
+                <h2 className="text-xl font-bold text-dark-navy mb-6 text-center">✨ أحدث المتاجر المضافة</h2>
+                <Swiper
+                  modules={[Autoplay, Navigation, Pagination]}
+                  spaceBetween={16}
+                  slidesPerView={1}
+                  breakpoints={{
+                    640: { slidesPerView: 2 },
+                    1024: { slidesPerView: 4 }
+                  }}
+                  loop={true}
+                  autoplay={{
+                    delay: 4000,
+                    disableOnInteraction: false,
+                  }}
+                  navigation={true}
+                  pagination={{ clickable: true }}
+                  className="store-carousel"
+                  style={{ padding: '0 0 40px 0' }}
+                >
+                  {latestStores.map(store => (
+                    <SwiperSlide key={store.id}>
+                      <StoreCard store={store} />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
               </div>
             )}
+
+            {/* باقي الفلاتر */}
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
               {[
                 { value: 'all', label: '🎯 الكل' },
