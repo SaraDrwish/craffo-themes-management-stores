@@ -10,8 +10,12 @@ const planColors = {
 };
 
 export default function StoreCard({ store }) {
-  const copyUrl = () => { navigator.clipboard.writeText(store.store_url); alert('تم نسخ الرابط'); };
+  const copyUrl = () => {
+    navigator.clipboard.writeText(store.store_url);
+    alert('تم نسخ الرابط');
+  };
   const imageUrl = store.image_url || 'https://placehold.co/600x400?text=Store+Preview';
+
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-light-mauve hover:border-purple group relative">
       <div className="relative h-40 bg-gray-100 overflow-hidden">

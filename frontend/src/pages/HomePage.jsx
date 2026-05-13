@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import ThemeCard from '../components/ThemeCard';
+import StoreCard from '../components/StoreCard';
 import Filters from '../components/Filters';
 import Footer from '../components/Footer';
 import { getAllThemes, getAllStoreLinks } from '../services/api';
@@ -10,50 +11,57 @@ export default function HomePage() {
   const [platform, setPlatform] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
   const [themes, setThemes] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+  const [stores, setStores] = useState([]);
+  const [filteredThemes, setFilteredThemes] = useState([]);
+  const [filteredStores, setFilteredStores] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [storeNames, setStoreNames] = useState([]); // لتخزين أسماء المتاجر لكل ثيم
+  const [searchMode, setSearchMode] = useState(false); // true if searching for a store name
 
   useEffect(() => {
-    loadThemes();
+    loadThemesAndStores();
   }, [platform, planFilter]);
 
-  async function loadThemes() {
+  async function loadThemesAndStores() {
     setLoading(true);
     const plan = planFilter === 'all' ? null : planFilter;
     const platformParam = platform === 'all' ? null : platform;
-    const data = await getAllThemes(platformParam, plan);
-    setThemes(data);
-    // جلب أسماء المتاجر لكل ثيم للبحث
-    const storeMap = {};
-    for (const theme of data) {
-      const stores = await getAllStoreLinks({ theme_id: theme.id });
-      storeMap[theme.id] = stores.map(s => s.store_name.toLowerCase());
-    }
-    setStoreNames(storeMap);
-    setFiltered(data);
+    const themesData = await getAllThemes(platformParam, plan);
+    setThemes(themesData);
+    // جلب كل المتاجر (بدون فلتر) لعرضها عند البحث
+    const storesData = await getAllStoreLinks({ platform: platformParam });
+    setStores(storesData);
+    setFilteredThemes(themesData);
+    setFilteredStores([]);
+    setSearchMode(false);
     setLoading(false);
   }
 
   useEffect(() => {
     if (!search.trim()) {
-      setFiltered(themes);
+      setFilteredThemes(themes);
+      setFilteredStores([]);
+      setSearchMode(false);
       return;
     }
     const lowerSearch = search.toLowerCase();
-    const filteredData = themes.filter(theme => {
-      // البحث في اسم الثيم
-      if (theme.name.toLowerCase().includes(lowerSearch)) return true;
-      // البحث في وصف الثيم
-      if (theme.description && theme.description.toLowerCase().includes(lowerSearch)) return true;
-      // البحث في أسماء المتاجر المرتبطة
-      const storesForTheme = storeNames[theme.id] || [];
-      if (storesForTheme.some(storeName => storeName.includes(lowerSearch))) return true;
-      return false;
-    });
-    setFiltered(filteredData);
-  }, [search, themes, storeNames]);
+    // البحث في الثيمات
+    const matchedThemes = themes.filter(theme =>
+      theme.name.toLowerCase().includes(lowerSearch) ||
+      (theme.description && theme.description.toLowerCase().includes(lowerSearch))
+    );
+    // البحث في المتاجر
+    const matchedStores = stores.filter(store =>
+      store.store_name.toLowerCase().includes(lowerSearch) ||
+      (store.theme_name && store.theme_name.toLowerCase().includes(lowerSearch))
+    );
+    setFilteredThemes(matchedThemes);
+    setFilteredStores(matchedStores);
+    setSearchMode(matchedStores.length > 0);
+  }, [search, themes, stores]);
+
+  // إذا كان هناك نتائج متاجر، نعرضها فقط (مع إمكانية عرض مختلط، حسب رغبتك – هنا نعرض المتاجر كأولوية)
+  const showStoresOnly = searchMode && filteredStores.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -85,17 +93,34 @@ export default function HomePage() {
         {loading ? (
           <div className="text-center py-20">جاري التحميل...</div>
         ) : (
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            <AnimatePresence>
-              {filtered.map(theme => (
-                <motion.div key={theme.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                  <ThemeCard theme={theme} platform={theme.platform} />
+          <>
+            {showStoresOnly && (
+              <div>
+                <h2 className="text-xl font-bold text-dark-navy mb-4 mt-6">نتائج البحث عن المتاجر</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredStores.map(store => <StoreCard key={store.id} store={store} />)}
+                </div>
+              </div>
+            )}
+            {!showStoresOnly && filteredThemes.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-dark-navy mb-4 mt-6">الثيمات</h2>
+                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <AnimatePresence>
+                    {filteredThemes.map(theme => (
+                      <motion.div key={theme.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                        <ThemeCard theme={theme} platform={theme.platform} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+              </div>
+            )}
+            {!showStoresOnly && filteredThemes.length === 0 && !loading && (
+              <div className="text-center py-20 text-gray-500">لا توجد نتائج مطابقة</div>
+            )}
+          </>
         )}
-        {!loading && filtered.length === 0 && <div className="text-center py-20 text-gray-500">لا توجد نتائج مطابقة</div>}
       </div>
       <Footer />
     </div>
