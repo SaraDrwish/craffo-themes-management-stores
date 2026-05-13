@@ -40,11 +40,16 @@ export default function AdminDashboard() {
   const handleThemeReorder = async (id, direction) => { await reorderTheme(id, direction, token); fetchThemes(); };
 
   const handleStoreSave = async () => {
+    if (!formData.theme_id || !formData.store_name || !formData.store_url || !formData.platform) {
+      setErrorMsg('الرجاء ملء جميع الحقول: الثيم، اسم المتجر، رابط المتجر، المنصة');
+      return;
+    }
     try {
       if (editingStoreLink) await updateStoreLink(editingStoreLink.id, formData, token);
       else await createStoreLink(formData, token);
       resetForm(); fetchStoreLinks(); fetchStats();
       setErrorMsg('');
+      alert('تم إضافة المتجر بنجاح');
     } catch (err) {
       const msg = err.response?.data?.error || 'حدث خطأ';
       setErrorMsg(msg);
@@ -83,12 +88,12 @@ export default function AdminDashboard() {
     <div className="bg-white p-4 rounded-lg mb-4">
       <h3 className="font-bold mb-2">{editingStoreLink ? 'تعديل متجر' : 'إضافة متجر جديد'}</h3>
       <div className="space-y-3">
-        <select value={formData.theme_id || ''} onChange={e => setFormData({...formData, theme_id: parseInt(e.target.value)})} className="border p-2 rounded w-full" required>
+        <select value={formData.theme_id || ''} onChange={e => setFormData({...formData, theme_id: parseInt(e.target.value)})} className="border p-2 rounded w-full">
           <option value="">-- اختر الثيم --</option>
           {themes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <input placeholder="اسم المتجر *" value={formData.store_name || ''} onChange={e => setFormData({...formData, store_name: e.target.value})} className="border p-2 rounded w-full" />
-        <input placeholder="رابط المتجر *" value={formData.store_url || ''} onChange={e => setFormData({...formData, store_url: e.target.value})} className="border p-2 rounded w-full" />
+        <input type="text" placeholder="اسم المتجر *" value={formData.store_name || ''} onChange={e => setFormData({...formData, store_name: e.target.value})} className="border p-2 rounded w-full" />
+        <input type="url" placeholder="رابط المتجر * (مثال: https://example.com)" value={formData.store_url || ''} onChange={e => setFormData({...formData, store_url: e.target.value})} className="border p-2 rounded w-full" />
         <select value={formData.platform || 'Salla'} onChange={e => setFormData({...formData, platform: e.target.value})} className="border p-2 rounded w-full">
           <option value="Salla">سلة</option><option value="Zid">زد</option>
         </select>
@@ -99,7 +104,7 @@ export default function AdminDashboard() {
           <option value="gold">👑 الباقة الذهبية</option>
         </select>
         {errorMsg && <div className="text-red-500 text-sm">{errorMsg}</div>}
-        <button onClick={handleStoreSave} className="bg-green-500 text-white px-4 py-2 rounded w-full">حفظ المتجر</button>
+        <button onClick={handleStoreSave} className="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600">{editingStoreLink ? 'تحديث المتجر' : 'حفظ المتجر'}</button>
         {editingStoreLink && <button onClick={resetForm} className="bg-gray-400 text-white px-4 py-2 rounded w-full mt-2">إلغاء التعديل</button>}
       </div>
     </div>
@@ -124,28 +129,9 @@ export default function AdminDashboard() {
           <>
             {renderThemeForm()}
             <div className="bg-white rounded shadow overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-200">…
-                  <th className="p-2">الاسم</th><th>المنصة</th><th>الباقة</th><th>المتاجر</th><th></th>
-                </thead>
-                <tbody>
-                  {themes.map(t => (
-                    <tr key={t.id} className="border-b">
-                      <td className="p-2">{t.name}</td>
-                      <td>{t.platform}</td>
-                      <td>{t.plan}</td>
-                      <td>{t.stores_count}</td>
-                      <td className="flex gap-1">
-                        <button onClick={() => { setEditingTheme(t); setFormData(t); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button>
-                        <button onClick={() => handleThemeReset(t.id)} className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs">Reset</button>
-                        <button onClick={() => handleThemeDelete(t.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button>
-                        <button onClick={() => handleThemeReorder(t.id, 'up')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↑</button>
-                        <button onClick={() => handleThemeReorder(t.id, 'down')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↓</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <table className="w-full text-sm"><thead className="bg-gray-200">…
+                <th className="p-2">الاسم</th><th>المنصة</th><th>الباقة</th><th>المتاجر</th><th></th>
+              </thead><tbody>{themes.map(t => (<tr key={t.id} className="border-b"><td className="p-2">{t.name}</td><td>{t.platform}</td><td>{t.plan}</td><td>{t.stores_count}</td><td className="flex gap-1"><button onClick={() => { setEditingTheme(t); setFormData(t); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button><button onClick={() => handleThemeReset(t.id)} className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs">Reset</button><button onClick={() => handleThemeDelete(t.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button><button onClick={() => handleThemeReorder(t.id,'up')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↑</button><button onClick={() => handleThemeReorder(t.id,'down')} className="bg-gray-500 text-white px-2 py-0.5 rounded text-xs">↓</button></td></tr>))}</tbody></table>
             </div>
           </>
         )}
@@ -153,29 +139,9 @@ export default function AdminDashboard() {
           <>
             {renderStoreForm()}
             <div className="bg-white rounded shadow overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-200">…
-                  <th className="p-2">اسم المتجر</th><th>الرابط</th><th>الثيم</th><th>المنصة</th><th>الباقة</th><th></th>
-                </thead>
-                <tbody>
-                  {storeLinks.map(s => {
-                    const themeName = themes.find(t => t.id === s.theme_id)?.name || 'غير معروف';
-                    return (
-                      <tr key={s.id} className="border-b">
-                        <td className="p-2">{s.store_name}</td>
-                        <td className="truncate max-w-xs">{s.store_url}</td>
-                        <td>{themeName}</td>
-                        <td>{s.platform}</td>
-                        <td>{s.plan === 'starter' ? '🚀 انطلاق' : s.plan === 'growth' ? '🌟 نمو' : s.plan === 'gold' ? '👑 ذهبية' : 'بدون باقة'}</td>
-                        <td className="flex gap-1">
-                          <button onClick={() => { setEditingStoreLink(s); setFormData({ theme_id: s.theme_id, store_name: s.store_name, store_url: s.store_url, platform: s.platform, plan: s.plan || 'none' }); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button>
-                          <button onClick={() => handleStoreDelete(s.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <table className="w-full text-sm"><thead className="bg-gray-200">…
+                <th className="p-2">اسم المتجر</th><th>الرابط</th><th>الثيم</th><th>المنصة</th><th>الباقة</th><th></th>
+              </thead><tbody>{storeLinks.map(s => { const themeName = themes.find(t => t.id === s.theme_id)?.name || 'غير معروف'; return (<tr key={s.id} className="border-b"><td className="p-2">{s.store_name}</td><td className="truncate max-w-xs">{s.store_url}</td><td>{themeName}</td><td>{s.platform}</td><td>{s.plan === 'starter' ? '🚀 انطلاق' : s.plan === 'growth' ? '🌟 نمو' : s.plan === 'gold' ? '👑 ذهبية' : 'بدون باقة'}</td><td className="flex gap-1"><button onClick={() => { setEditingStoreLink(s); setFormData({ theme_id: s.theme_id, store_name: s.store_name, store_url: s.store_url, platform: s.platform, plan: s.plan || 'none' }); }} className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">تعديل</button><button onClick={() => handleStoreDelete(s.id)} className="bg-red-500 text-white px-2 py-0.5 rounded text-xs">حذف</button></td></tr>); })}</tbody></table>
             </div>
           </>
         )}

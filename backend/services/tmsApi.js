@@ -1,5 +1,5 @@
 import axios from 'axios';
-import db from '../db.js';
+import { get, run, all } from '../db.js';
 
 const TMS_API_BASE = 'https://tms.craffo.com/api';
 
@@ -12,7 +12,7 @@ export async function fetchTmsThemesAndCategories() {
 
     for (const theme of themes) {
       const platform = theme.platform === 'Zid' ? 'Zid' : 'Salla';
-      const existing = await db.get('SELECT id, is_modified FROM themes WHERE external_id = ? AND platform = ?', [theme.id, platform]);
+      const existing = await get('SELECT id, is_modified FROM themes WHERE external_id = ? AND platform = ?', [theme.id, platform]);
       const apiData = {
         name: theme.name,
         image: theme.image || theme.cover_image || '',
@@ -23,21 +23,23 @@ export async function fetchTmsThemesAndCategories() {
         plan: theme.plan || 'starter'
       };
       if (!existing) {
-        await db.run(`
+        await run(`
           INSERT INTO themes (external_id, platform, name, image, description, price, demo_url, purchase_url, plan, original_api_data)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [theme.id, platform, apiData.name, apiData.image, apiData.description, apiData.price, apiData.demo_url, apiData.purchase_url, apiData.plan, JSON.stringify(apiData)]);
+        console.log(`➕ Added theme: ${apiData.name}`);
       } else if (!existing.is_modified) {
-        await db.run(`
+        await run(`
           UPDATE themes SET name=?, image=?, description=?, price=?, demo_url=?, purchase_url=?, plan=?, original_api_data=?, updated_at=CURRENT_TIMESTAMP
           WHERE id=?
         `, [apiData.name, apiData.image, apiData.description, apiData.price, apiData.demo_url, apiData.purchase_url, apiData.plan, JSON.stringify(apiData), existing.id]);
+        console.log(`🔄 Updated theme: ${apiData.name}`);
       }
     }
-    console.log(`✅ Synced ${themes.length} themes`);
+    console.log(`✅ Synced ${themes.length} themes from API`);
     return { success: true, themesCount: themes.length };
   } catch (error) {
-    console.error('API error:', error.message);
+    console.error('❌ TMS API error:', error.message);
     return { success: false, error: error.message };
   }
 }
