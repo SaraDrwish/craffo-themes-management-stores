@@ -56,7 +56,7 @@ export default function StoreCard({ store }) {
         <div className="flex justify-between items-center mt-4">
           <div className="flex gap-2">
             <a href={store.store_url} target="_blank" className="bg-purple text-white px-3 py-1 rounded-full text-sm hover:bg-dark-navy transition">زيارة المتجر</a>
-            <button onClick={copyUrl} className="border border-gray-300 text-gray-600 px-3 py-1 rounded-full text-sm hover:bg-gray-100 transition">📋 نسخ</button>
+            <button onClick={copyUrl} className="border border-gray-300 text-gray-600 px-3 py-1 rounded-full text-sm hover:bg-gray-100 transition">  نسخ</button>
           </div>
         </div>
       </div>

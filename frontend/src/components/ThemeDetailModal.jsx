@@ -80,7 +80,7 @@ export default function ThemeDetailModal({ themeId, onClose }) {
               );
             })}
           </div>
-          {stores.length > 0 && <button onClick={() => copyAllLinks(stores)} className="mt-6 w-full bg-purple text-white py-2 rounded-lg hover:bg-dark-navy transition">📋 نسخ جميع روابط المتاجر ({stores.length})</button>}
+          {stores.length > 0 && <button onClick={() => copyAllLinks(stores)} className="mt-6 w-full bg-purple text-white py-2 rounded-lg hover:bg-dark-navy transition">  نسخ جميع روابط المتاجر ({stores.length})</button>}
           {copiedMessage && <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">{copiedMessage}</div>}
         </div>
       </motion.div>
