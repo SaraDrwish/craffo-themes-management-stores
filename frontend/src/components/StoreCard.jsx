@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { getThemeById } from '../services/api';
 
 const planLabels = {
-  starter: '🚀 باقة الانطلاق',
-  growth: '🌟 باقة النمو',
-  gold: '👑 الباقة الذهبية'
+  starter: ' باقة الانطلاق',
+  growth: ' باقة النمو',
+  gold: 'الباقة الذهبية'
 };
 const planColors = {
   starter: 'bg-green-500',
@@ -50,7 +50,7 @@ export default function StoreCard({ store }) {
         <div className="flex justify-between items-center mt-1">
           <p className="text-mauve text-sm">الثيم: {store.theme_name || 'غير معروف'}</p>
           <span className="bg-purplelight text-dark-navy text-xs px-2 py-0.5 rounded-full">
-            {store.platform === 'Salla' ? '🛒 سلة' : '📦 زد'}
+            {store.platform === 'Salla' ? ' سلة' : ' زد'}
           </span>
         </div>
         <div className="flex justify-between items-center mt-4">

@@ -4,7 +4,7 @@ import { get, run, all } from '../db.js';
 const TMS_API_BASE = 'https://tms.craffo.com/api';
 
 export async function fetchTmsThemesAndCategories() {
-  console.log('🔄 Fetching themes from API...');
+  console.log(' Fetching themes from API...');
   try {
     const themesRes = await axios.get(`${TMS_API_BASE}/themes`);
     let themes = themesRes.data;
@@ -33,13 +33,13 @@ export async function fetchTmsThemesAndCategories() {
           UPDATE themes SET name=?, image=?, description=?, price=?, demo_url=?, purchase_url=?, plan=?, original_api_data=?, updated_at=CURRENT_TIMESTAMP
           WHERE id=?
         `, [apiData.name, apiData.image, apiData.description, apiData.price, apiData.demo_url, apiData.purchase_url, apiData.plan, JSON.stringify(apiData), existing.id]);
-        console.log(`🔄 Updated theme: ${apiData.name}`);
+        console.log(` Updated theme: ${apiData.name}`);
       }
     }
-    console.log(`✅ Synced ${themes.length} themes from API`);
+    console.log(`Synced ${themes.length} themes from API`);
     return { success: true, themesCount: themes.length };
   } catch (error) {
-    console.error('❌ TMS API error:', error.message);
+    console.error(' TMS API error:', error.message);
     return { success: false, error: error.message };
   }
 }

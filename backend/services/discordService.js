@@ -20,7 +20,7 @@ function detectPlatform(url) {
 
 export async function importDiscordLinks() {
   if (!config.discordBotToken || config.discordChannelIds.length === 0) {
-    console.log('⚠️ Discord not configured');
+    console.log(' Discord not configured');
     return { success: false, error: 'Discord not configured' };
   }
   let allLinks = [];
@@ -56,6 +56,6 @@ export async function importDiscordLinks() {
       newCount++;
     }
   }
-  console.log(`📥 Discord import: ${newCount} new links`);
+  console.log(` Discord import: ${newCount} new links`);
   return { success: true, newLinks: newCount, total: unique.length };
 }

@@ -30,7 +30,7 @@ export default function ThemeCard({ theme, platform }) {
           />
           <div className="absolute top-2 right-2 bg-purple text-white text-xs px-2 py-1 rounded-full">{platform}</div>
           {theme.is_pinned === 1 && (
-            <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">📌 مثبت</div>
+            <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full"> مثبت</div>
           )}
           {/* تم إزالة شارة الباقة نهائياً من الثيمات */}
         </div>
@@ -45,9 +45,9 @@ export default function ThemeCard({ theme, platform }) {
           <div className="flex gap-2 mt-3">
             {theme.demo_url && <a href={theme.demo_url} target="_blank" className="flex-1 text-center border border-purple text-purple rounded-lg py-1 hover:bg-purple hover:text-white transition">Demo</a>}
             {theme.purchase_url && <a href={theme.purchase_url} target="_blank" className="flex-1 text-center bg-purple text-white rounded-lg py-1 hover:bg-dark-navy transition">شراء</a>}
-            <button onClick={copyAllStoreLinks} className="flex-1 text-center border border-gray-300 text-gray-600 rounded-lg py-1 hover:bg-gray-100 transition">📋 نسخ الروابط</button>
+            <button onClick={copyAllStoreLinks} className="flex-1 text-center border border-gray-300 text-gray-600 rounded-lg py-1 hover:bg-gray-100 transition"> نسخ الروابط</button>
           </div>
-          {copied && <div className="text-green-600 text-xs mt-2 text-center">✅ تم نسخ روابط جميع المتاجر</div>}
+          {copied && <div className="text-green-600 text-xs mt-2 text-center"> تم نسخ روابط جميع المتاجر</div>}
         </div>
       </div>
       {showModal && <ThemeDetailModal themeId={theme.id} onClose={() => setShowModal(false)} />}

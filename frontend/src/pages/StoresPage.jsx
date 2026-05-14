@@ -60,10 +60,10 @@ export default function StoresPage() {
         </div>
         <div className="flex justify-center gap-3 mb-6 flex-wrap">
           {[
-            { value: 'all', label: '🎯 كل الباقات' },
-            { value: 'starter', label: '🚀 باقة الانطلاق' },
-            { value: 'growth', label: '🌟 باقة النمو' },
-            { value: 'gold', label: '👑 الباقة الذهبية' }
+            { value: 'all', label: 'كل الباقات' },
+            { value: 'starter', label: 'باقة الانطلاق' },
+            { value: 'growth', label: ' باقة النمو' },
+            { value: 'gold', label: ' الباقة الذهبية' }
           ].map(plan => <button key={plan.value} onClick={() => setPlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm ${planFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200'}`}>{plan.label}</button>)}
         </div>
         <div className="flex justify-center">

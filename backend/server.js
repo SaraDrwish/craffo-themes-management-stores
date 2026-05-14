@@ -34,5 +34,5 @@ app.get('*', (req, res) => {
 
 app.listen(config.port, () => {
   console.log(`🚀 Server running on port ${config.port}`);
-  console.log(`🔐 Admin login: http://localhost:${config.port}/admin-login`);
+  console.log(` Admin login: http://localhost:${config.port}/admin-login`);
 });

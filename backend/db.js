@@ -91,12 +91,12 @@ async function createDefaultAdmin() {
   if (!existing) {
     const hash = bcrypt.hashSync(config.adminPassword, 10);
     await run('INSERT INTO admin_users (username, password_hash) VALUES (?, ?)', [config.adminUsername, hash]);
-    console.log('✅ Admin user created');
+    console.log(' Admin user created');
   }
 }
 
 await initTables();
 await createDefaultAdmin();
-console.log('✅ SQLite database ready (themes.plan accepts NULL)');
+console.log(' SQLite database ready (themes.plan accepts NULL)');
 
 export { db };

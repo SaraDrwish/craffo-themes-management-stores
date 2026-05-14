@@ -3,9 +3,9 @@ import { getThemeById } from '../services/api';
 import { motion } from 'framer-motion';
 
 const planLabels = {
-  starter: '🚀 باقة الانطلاق',
-  growth: '🌟 باقة النمو',
-  gold: '👑 الباقة الذهبية'
+  starter: ' باقة الانطلاق',
+  growth: ' باقة النمو',
+  gold: 'الباقة الذهبية'
 };
 const planColors = {
   starter: 'bg-green-500',
@@ -28,7 +28,7 @@ export default function ThemeDetailModal({ themeId, onClose }) {
   const copyAllLinks = (stores) => {
     const urls = stores.map(s => s.store_url).join('\n');
     navigator.clipboard.writeText(urls);
-    setCopiedMessage('✅ تم نسخ جميع روابط المتاجر');
+    setCopiedMessage(' تم نسخ جميع روابط المتاجر');
     setTimeout(() => setCopiedMessage(''), 2000);
   };
 
@@ -72,7 +72,7 @@ export default function ThemeDetailModal({ themeId, onClose }) {
                       <span className="text-purple text-sm">{store.platform}</span>
                       <div className="flex gap-2">
                         <a href={store.store_url} target="_blank" className="bg-purple text-white px-2 py-1 rounded text-xs">زيارة</a>
-                        <button onClick={() => { navigator.clipboard.writeText(store.store_url); setCopiedMessage('✅ تم نسخ الرابط'); setTimeout(() => setCopiedMessage(''), 1500); }} className="border border-gray-300 text-gray-600 px-2 py-1 rounded text-xs">نسخ</button>
+                        <button onClick={() => { navigator.clipboard.writeText(store.store_url); setCopiedMessage(' تم نسخ الرابط'); setTimeout(() => setCopiedMessage(''), 1500); }} className="border border-gray-300 text-gray-600 px-2 py-1 rounded text-xs">نسخ</button>
                       </div>
                     </div>
                   </div>

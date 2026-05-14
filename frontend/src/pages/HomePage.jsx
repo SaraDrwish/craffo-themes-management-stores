@@ -35,10 +35,8 @@ export default function HomePage() {
   const [themeSearch, setThemeSearch] = useState('');
   const [loadingThemes, setLoadingThemes] = useState(true);
 
-  // جلب أحدث المتاجر
   async function loadLatestStores() {
     try {
-      // جلب عدد كافٍ من المتاجر (مثلاً 12) لتجربة السلايدر الدائري بشكل جيد
       const res = await getAllStoreLinks({ limit: 12 });
       setLatestStores(res);
     } catch (err) {
@@ -117,10 +115,9 @@ export default function HomePage() {
 
         {activeTab === 'stores' && (
           <>
-            {/* سلايدر أحدث المتاجر - Swiper loop */}
             {latestStores.length > 0 && (
               <div className="mb-12">
-                <h2 className="text-xl font-bold text-dark-navy mb-6 text-center">✨ أحدث المتاجر المضافة</h2>
+                <h2 className="text-xl font-bold text-dark-navy mb-6 text-center">أحدث المتاجر المضافة</h2>
                 <Swiper
                   modules={[Autoplay, Navigation, Pagination]}
                   spaceBetween={16}
@@ -151,19 +148,19 @@ export default function HomePage() {
             {/* باقي الفلاتر */}
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
               {[
-                { value: 'all', label: '🎯 الكل' },
-                { value: 'Salla', label: '🛒 سلة' },
-                { value: 'Zid', label: '📦 زد' }
+                { value: 'all', label: 'الكل' },
+                { value: 'Salla', label: ' سلة' },
+                { value: 'Zid', label: 'زد' }
               ].map(filter => (
                 <button key={filter.value} onClick={() => setStorePlatformFilter(filter.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlatformFilter === filter.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{filter.label}</button>
               ))}
             </div>
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
               {[
-                { value: 'all', label: '🎯 كل الباقات' },
-                { value: 'starter', label: '🚀 باقة الانطلاق' },
-                { value: 'growth', label: '🌟 باقة النمو' },
-                { value: 'gold', label: '👑 الباقة الذهبية' }
+                { value: 'all', label: ' كل الباقات' },
+                { value: 'starter', label: ' باقة الانطلاق' },
+                { value: 'growth', label: ' باقة النمو' },
+                { value: 'gold', label: ' الباقة الذهبية' }
               ].map(plan => (
                 <button key={plan.value} onClick={() => setStorePlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlanFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{plan.label}</button>
               ))}
@@ -196,10 +193,10 @@ export default function HomePage() {
             </div>
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
               {[
-                { value: 'all', label: '🎯 الكل' },
-                { value: 'starter', label: '🚀 باقة الانطلاق' },
-                { value: 'growth', label: '🌟 باقة النمو' },
-                { value: 'gold', label: '👑 الباقة الذهبية' }
+                { value: 'all', label: ' الكل' },
+                { value: 'starter', label: 'باقة الانطلاق' },
+                { value: 'growth', label: ' باقة النمو' },
+                { value: 'gold', label: ' الباقة الذهبية' }
               ].map(plan => <button key={plan.value} onClick={() => setPlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${planFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{plan.label}</button>)}
             </div>
             <Filters search={themeSearch} setSearch={setThemeSearch} placeholder="ابحث باسم الثيم..." />

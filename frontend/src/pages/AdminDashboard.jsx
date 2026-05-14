@@ -139,9 +139,9 @@ export default function AdminDashboard() {
         <input placeholder="السعر" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className="border p-1 rounded" />
         <select value={formData.plan || 'none'} onChange={e => setFormData({...formData, plan: e.target.value})} className="border p-1 rounded">
           <option value="none">بدون باقة</option>
-          <option value="starter">🚀 باقة الانطلاق</option>
-          <option value="growth">🌟 باقة النمو</option>
-          <option value="gold">👑 الباقة الذهبية</option>
+          <option value="starter"> باقة الانطلاق</option>
+          <option value="growth"> باقة النمو</option>
+          <option value="gold"> الباقة الذهبية</option>
         </select>
         <input placeholder="رابط الصورة" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} className="border p-1 rounded" />
         <input placeholder="رابط Demo" value={formData.demo_url || ''} onChange={e => setFormData({...formData, demo_url: e.target.value})} className="border p-1 rounded" />
@@ -168,8 +168,8 @@ export default function AdminDashboard() {
             onChange={e => setFormData({...formData, platform: e.target.value, theme_id: ''})}
             className="border p-2 rounded w-full"
           >
-            <option value="Salla">🛒 سلة</option>
-            <option value="Zid">📦 زد</option>
+            <option value="Salla">سلة</option>
+            <option value="Zid">زد</option>
           </select>
 
           <SearchableSelect
@@ -183,9 +183,9 @@ export default function AdminDashboard() {
           <input type="url" placeholder="رابط المتجر * (http:// أو https://)" value={formData.store_url} onChange={e => setFormData({...formData, store_url: e.target.value})} className="border p-2 rounded w-full" />
           <select value={formData.plan} onChange={e => setFormData({...formData, plan: e.target.value})} className="border p-2 rounded w-full">
             <option value="none">بدون باقة</option>
-            <option value="starter">🚀 باقة الانطلاق</option>
-            <option value="growth">🌟 باقة النمو</option>
-            <option value="gold">👑 الباقة الذهبية</option>
+            <option value="starter"> باقة الانطلاق</option>
+            <option value="growth"> باقة النمو</option>
+            <option value="gold"> الباقة الذهبية</option>
           </select>
           <div className="border p-2 rounded">
             <label className="block text-sm font-medium mb-1">صورة المتجر (اختياري – إذا لم ترفع تستخدم الصورة الافتراضية)</label>
