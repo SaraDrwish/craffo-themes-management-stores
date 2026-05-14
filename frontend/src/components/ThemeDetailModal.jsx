@@ -9,7 +9,7 @@ const planLabels = {
 };
 const planColors = {
   starter: 'bg-green-500',
-  growth: 'bg-blue-600',
+  growth: 'bg-sky-800',
   gold: 'bg-yellow-600'
 };
 
@@ -48,7 +48,7 @@ export default function ThemeDetailModal({ themeId, onClose }) {
           <p className="text-gray-600 mb-4">{theme.description}</p>
           <div className="mb-4 flex gap-4">
             {theme.demo_url && <a href={theme.demo_url} target="_blank" className="bg-purple text-white px-4 py-2 rounded-lg">عرض Demo</a>}
-            {theme.purchase_url && <a href={theme.purchase_url} target="_blank" className="bg-dark-navy text-white px-4 py-2 rounded-lg">شراء الثيم</a>}
+            {theme.purchase_url && <a href={theme.purchase_url} target="_blank" className="bg-gradent-color text-white px-4 py-2 rounded-lg">شراء الثيم</a>}
           </div>
           <h3 className="text-xl font-bold mt-6 mb-4">المتاجر المرتبطة بهذا الثيم</h3>
           {stores.length === 0 && <p className="text-gray-500">لا توجد متاجر مرتبطة بهذا الثيم حتى الآن.</p>}

@@ -5,12 +5,21 @@ export default {
     extend: {
       colors: {
         'dark-navy': '#150543',
-        'gradent-color': 'linear-gradient(to right top, #150543, #351c6b, #563595, #7a4fc2, #9f6af0)',
         'purple': '#a46df6',
         'purplelight': '#ccb1f4',
         'mauve': '#9b92b3',
         'light-mauve': '#e0ccfe',
-      }
+      },
+
+      backgroundImage: {
+        'gradent-color':
+          'linear-gradient(135deg, #9f6af0 0%, #150543 100%)',
+        'gradent-color-op':
+          'linear-gradient(135deg, #150543 0%,  #9f6af0 100%)',
+
+         
+
+      },
     },
   },
   plugins: [],

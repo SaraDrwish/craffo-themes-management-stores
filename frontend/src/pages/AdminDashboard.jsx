@@ -264,7 +264,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="bg-dark-navy text-white p-4 flex justify-between items-center">
+      <div className="bg-gradent-color text-white p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">لوحة تحكم Craffo</h1>
         <div className="flex gap-2 items-center">
           <span>إحصائيات: {stats.themes} ثيم | {stats.stores} متجر</span>

@@ -8,7 +8,7 @@ const planLabels = {
 };
 const planColors = {
   starter: 'bg-green-500',
-  growth: 'bg-blue-600',
+  growth: 'bg-sky-300',
   gold: 'bg-yellow-600'
 };
 

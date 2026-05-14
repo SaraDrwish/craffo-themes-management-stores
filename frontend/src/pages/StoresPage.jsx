@@ -64,7 +64,7 @@ export default function StoresPage() {
             { value: 'starter', label: 'باقة الانطلاق' },
             { value: 'growth', label: ' باقة النمو' },
             { value: 'gold', label: ' الباقة الذهبية' }
-          ].map(plan => <button key={plan.value} onClick={() => setPlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm ${planFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200'}`}>{plan.label}</button>)}
+          ].map(plan => <button key={plan.value} onClick={() => setPlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm ${planFilter === plan.value ? 'bg-gradent-color text-white' : 'bg-gray-200'}`}>{plan.label}</button>)}
         </div>
         <div className="flex justify-center">
           <input type="text" placeholder="ابحث باسم المتجر أو الرابط..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full max-w-md border border-purplelight rounded-full px-4 py-2" />

@@ -109,8 +109,8 @@ export default function HomePage() {
       <Navbar />
       <div className="container mx-auto px-4 py-6 flex-1">
         <div className="flex justify-center gap-6 mb-8">
-          <button onClick={() => setActiveTab('stores')} className={`px-8 py-2 rounded-full font-bold transition ${activeTab === 'stores' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>جميع المتاجر</button>
-          <button onClick={() => setActiveTab('themes')} className={`px-8 py-2 rounded-full font-bold transition ${activeTab === 'themes' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>الثيمات</button>
+          <button onClick={() => setActiveTab('stores')} className={`px-8 py-2 rounded-full font-bold transition ${activeTab === 'stores' ? 'bg-gradent-color-op text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>جميع المتاجر</button>
+          <button onClick={() => setActiveTab('themes')} className={`px-8 py-2 rounded-full font-bold transition ${activeTab === 'themes' ? 'bg-gradent-color text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>الثيمات</button>
         </div>
 
         {activeTab === 'stores' && (
@@ -152,7 +152,7 @@ export default function HomePage() {
                 { value: 'Salla', label: ' سلة' },
                 { value: 'Zid', label: 'زد' }
               ].map(filter => (
-                <button key={filter.value} onClick={() => setStorePlatformFilter(filter.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlatformFilter === filter.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{filter.label}</button>
+                <button key={filter.value} onClick={() => setStorePlatformFilter(filter.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlatformFilter === filter.value ? 'bg-gradent-color text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{filter.label}</button>
               ))}
             </div>
             <div className="flex justify-center gap-3 mb-6 flex-wrap">
@@ -162,7 +162,7 @@ export default function HomePage() {
                 { value: 'growth', label: ' باقة النمو' },
                 { value: 'gold', label: ' الباقة الذهبية' }
               ].map(plan => (
-                <button key={plan.value} onClick={() => setStorePlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlanFilter === plan.value ? 'bg-dark-navy text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{plan.label}</button>
+                <button key={plan.value} onClick={() => setStorePlanFilter(plan.value)} className={`px-4 py-1 rounded-full text-sm font-semibold transition ${storePlanFilter === plan.value ? 'bg-gradent-color text-white' : 'bg-gray-200 text-dark-navy hover:bg-purplelight'}`}>{plan.label}</button>
               ))}
             </div>
             <div className="flex justify-center gap-4 mb-6 flex-wrap">
@@ -187,7 +187,7 @@ export default function HomePage() {
         {activeTab === 'themes' && (
           <>
             <div className="flex justify-center gap-6 mb-8">
-              <button onClick={() => setPlatform('all')} className={`px-6 py-2 rounded-full font-bold transition ${platform === 'all' ? 'bg-dark-navy text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>الكل</button>
+              <button onClick={() => setPlatform('all')} className={`px-6 py-2 rounded-full font-bold transition ${platform === 'all' ? 'bg-gradent-color text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}>الكل</button>
               <button onClick={() => setPlatform('Salla')} className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition ${platform === 'Salla' ? 'bg-purple text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}><img src="https://asas-tools.com/u/uploads/sara_craffo/sallah-logo.png" alt="Salla" className="w-6 h-6" /> سلة</button>
               <button onClick={() => setPlatform('Zid')} className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition ${platform === 'Zid' ? 'bg-purple text-white shadow-lg' : 'bg-light-mauve text-dark-navy'}`}><img src="https://asas-tools.com/u/uploads/sara_craffo/zid-logo.png" alt="Zid" className="w-6 h-6" /> زد</button>
             </div>
